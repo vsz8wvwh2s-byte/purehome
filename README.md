@@ -2,9 +2,9 @@
 
 PureHome is a cleaning-services booking application.
 
-## Current backend
+## Current build
 
-The live Supabase backend includes authentication-ready profiles, customer addresses, services, bookings, cleaner assignments, payments, notifications, audit logs, Row Level Security, protected booking/payment RPCs, and Edge Functions.
+The customer-facing React + TypeScript interface is connected to the live Supabase project for authentication, services, saved addresses, and protected booking creation.
 
 ### Active Edge Functions
 - `create-booking`
@@ -13,10 +13,14 @@ The live Supabase backend includes authentication-ready profiles, customer addre
 - `accept-assignment`
 - `complete-job`
 
+## Deployment
+
+PureHome is configured for GitHub Pages through GitHub Actions. Pushes to `main` automatically build and deploy the web app.
+
 ## Payment safety
 
 The connected Stripe account is live-mode. Do not run test transactions against live Stripe. Payment creation and webhook deployment should only be enabled after a Stripe test/sandbox credential path and webhook secret are configured in Supabase.
 
-## Next milestone
+## Current milestone
 
-Build the customer-facing PureHome frontend, connect authentication and booking screens to Supabase, then add safe Stripe test-mode checkout and end-to-end testing.
+Deploy the first browser-testable PureHome build, validate authentication and booking end to end, then add safe Stripe test-mode checkout.
