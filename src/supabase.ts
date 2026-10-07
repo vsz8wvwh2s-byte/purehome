@@ -5,6 +5,8 @@ export async function signUp(email:string,password:string,fullName:string){retur
 export async function signIn(email:string,password:string){return supabase.auth.signInWithPassword({email,password});}
 export async function signOut(){return supabase.auth.signOut();}
 export async function getMyRoles(){return supabase.from('user_roles').select('role');}
+export async function getMyProfile(){const{data:{user}}=await supabase.auth.getUser();if(!user)return{data:null,error:new Error('Please sign in first')};return supabase.from('profiles').select('id,first_name,last_name,email,phone').eq('id',user.id).single();}
+export async function updateMyProfile(input:{first_name:string;last_name:string;phone?:string}){const{data:{user}}=await supabase.auth.getUser();if(!user)return{data:null,error:new Error('Please sign in first')};return supabase.from('profiles').update({first_name:input.first_name.trim(),last_name:input.last_name.trim(),phone:input.phone?.trim()||null}).eq('id',user.id).select('id,first_name,last_name,email,phone').single();}
 export async function getServices(){return supabase.from('services').select('id,name,description,base_price,estimated_minutes').eq('is_active',true).order('base_price');}
 export async function getAddresses(){return supabase.from('customer_addresses').select('*').order('is_default',{ascending:false}).order('created_at');}
 export async function deleteAddress(id:string){return supabase.from('customer_addresses').delete().eq('id',id);}
