@@ -50,6 +50,8 @@ export async function createReview(booking_id:string,rating:number,comment:strin
 
 export async function getCleanerEarnings(){const{data:{user}}=await supabase.auth.getUser();if(!user)return{data:null,error:new Error('Please sign in first')};return supabase.from('cleaner_assignments').select('id,completed_at,bookings!inner(id,booking_number,total,currency,scheduled_start)').eq('cleaner_id',user.id).eq('status','completed').order('completed_at',{ascending:false});}
 
+export async function getWebhookHealth(){return supabase.from('stripe_webhook_health').select('events_24h,processed_24h,errors_24h,pending_24h,latest_event_at,latest_error_at').single();}
+
 export async function getWebhookOperations(limit=20){return supabase.from('stripe_webhook_admin').select('id,stripe_event_id,event_type,processed_at,error_message,created_at,processing_status').order('created_at',{ascending:false}).limit(limit);}
 
 export async function getBusinessSettings(){return supabase.from('business_settings').select('support_email,support_phone,booking_lead_hours,cancellation_cutoff_hours,default_currency').eq('id',true).single();}
