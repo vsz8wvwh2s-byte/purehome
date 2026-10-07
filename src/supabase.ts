@@ -33,6 +33,8 @@ export async function markEnRoute(assignment_id:string){return supabase.function
 export async function markArrived(assignment_id:string){return supabase.functions.invoke('update-assignment-status',{body:{assignment_id,status:'arrived'}});}
 export async function startJob(assignment_id:string){return supabase.functions.invoke('update-assignment-status',{body:{assignment_id,status:'in_progress'}});}
 
+export async function getNotificationPreferences(){const{data:{user}}=await supabase.auth.getUser();if(!user)return{data:null,error:new Error('Not signed in')};return supabase.from('notification_preferences').select('*').eq('user_id',user.id).maybeSingle();}
+export async function saveNotificationPreferences(prefs:{booking_updates:boolean,payment_updates:boolean,review_updates:boolean,system_updates:boolean}){const{data:{user}}=await supabase.auth.getUser();if(!user)return{data:null,error:new Error('Not signed in')};return supabase.from('notification_preferences').upsert({user_id:user.id,...prefs,updated_at:new Date().toISOString()},{onConflict:'user_id'}).select().single();}
 export async function getNotifications(){return supabase.from('notifications').select('id,type,title,body,read_at,created_at,booking_id').order('created_at',{ascending:false}).limit(50);}
 export async function markNotificationRead(id:string){return supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id);}
 export async function markAllNotificationsRead(){const{data:{user}}=await supabase.auth.getUser();if(!user)return{data:null,error:new Error('Please sign in first')};return supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('user_id',user.id).is('read_at',null).select('id');}
