@@ -18,4 +18,4 @@ export async function acceptAssignment(assignment_id:string){return supabase.fun
 export async function completeJob(assignment_id:string,cleaner_notes?:string){return supabase.functions.invoke('complete-job',{body:{assignment_id,cleaner_notes}});}
 export async function createBooking(input:{address_id:string;scheduled_start:string;scheduled_end:string;items:{service_id:string;quantity:number}[];customer_notes?:string}){return supabase.functions.invoke('create-booking',{body:input});}
 export async function cancelBooking(booking_id:string,reason='Cancelled by customer'){return supabase.functions.invoke('cancel-booking',{body:{booking_id,reason}});}
-export async function createPayment(booking_id:string){return supabase.functions.invoke('create-payment',{body:{booking_id}});}
+export async function createPayment(booking_id:string){return supabase.functions.invoke('create-payment',{body:{booking_id}});}\nexport async function retryPayment(booking_id:string){return createPayment(booking_id);}
