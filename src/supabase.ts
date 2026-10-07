@@ -21,9 +21,9 @@ export async function getAvailableCleaners(){return supabase.from('cleaner_profi
 export async function getProfiles(ids:string[]){if(!ids.length)return{data:[],error:null};return supabase.from('profiles').select('id,first_name,last_name,email,phone').in('id',ids);}
 export async function assignCleaner(booking_id:string,cleaner_id:string){return supabase.functions.invoke('assign-cleaner',{body:{booking_id,cleaner_id}});}
 export async function acceptAssignment(assignment_id:string){return supabase.functions.invoke('accept-assignment',{body:{assignment_id}});}
-export async function completeJob(assignment_id:string,cleaner_notes?:string){return supabase.functions.invoke('complete-job',{body:{assignment_id,cleaner_notes}});}
+export async function completeJob(assignment_id:string,cleaner_notes?:string){const notes=cleaner_notes?.trim();if(notes&&notes.length>1000)return{data:null,error:new Error('Completion notes must be 1000 characters or fewer')};return supabase.functions.invoke('complete-job',{body:{assignment_id,cleaner_notes:notes||undefined}});}
 export async function createBooking(input:{address_id:string;scheduled_start:string;scheduled_end:string;items:{service_id:string;quantity:number}[];customer_notes?:string}){return supabase.functions.invoke('create-booking',{body:input});}
-export async function cancelBooking(booking_id:string,reason='Cancelled by customer'){return supabase.functions.invoke('cancel-booking',{body:{booking_id,reason}});}
+export async function cancelBooking(booking_id:string,reason='Cancelled by customer'){const clean=reason.trim()||'Cancelled by customer';if(clean.length>500)return{data:null,error:new Error('Cancellation reason must be 500 characters or fewer')};return supabase.functions.invoke('cancel-booking',{body:{booking_id,reason:clean}});}
 export async function createPayment(booking_id:string){return supabase.functions.invoke('create-payment',{body:{booking_id}});}
 export async function retryPayment(booking_id:string){return createPayment(booking_id);}
 
