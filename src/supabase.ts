@@ -39,3 +39,7 @@ export async function getCleanerEarnings(){const{data:{user}}=await supabase.aut
 
 export async function getAdminServices(){return supabase.from('services').select('id,name,description,base_price,estimated_minutes,is_active').order('name');}
 export async function updateService(id:string,changes:{base_price?:number;estimated_minutes?:number;is_active?:boolean}){return supabase.from('services').update(changes).eq('id',id).select().single();}
+
+export async function getServiceAreas(){return supabase.from('service_areas').select('id,postal_code,city,state,is_active').order('postal_code');}
+export async function addServiceArea(postal_code:string,city?:string,state?:string){return supabase.from('service_areas').insert({postal_code,city:city||null,state:state||null}).select().single();}
+export async function updateServiceArea(id:string,is_active:boolean){return supabase.from('service_areas').update({is_active,updated_at:new Date().toISOString()}).eq('id',id).select().single();}
