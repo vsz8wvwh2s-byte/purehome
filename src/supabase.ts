@@ -25,3 +25,6 @@ export async function retryPayment(booking_id:string){return createPayment(booki
 export async function markEnRoute(assignment_id:string){return supabase.functions.invoke('update-assignment-status',{body:{assignment_id,status:'en_route'}});}
 export async function markArrived(assignment_id:string){return supabase.functions.invoke('update-assignment-status',{body:{assignment_id,status:'arrived'}});}
 export async function startJob(assignment_id:string){return supabase.functions.invoke('update-assignment-status',{body:{assignment_id,status:'in_progress'}});}
+
+export async function getNotifications(){return supabase.from('notifications').select('id,type,title,body,is_read,created_at,booking_id').order('created_at',{ascending:false}).limit(50);}
+export async function markNotificationRead(id:string){return supabase.from('notifications').update({is_read:true}).eq('id',id);}
