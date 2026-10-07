@@ -21,3 +21,7 @@ export async function createBooking(input:{address_id:string;scheduled_start:str
 export async function cancelBooking(booking_id:string,reason='Cancelled by customer'){return supabase.functions.invoke('cancel-booking',{body:{booking_id,reason}});}
 export async function createPayment(booking_id:string){return supabase.functions.invoke('create-payment',{body:{booking_id}});}
 export async function retryPayment(booking_id:string){return createPayment(booking_id);}
+
+export async function markEnRoute(assignment_id:string){return supabase.functions.invoke('update-assignment-status',{body:{assignment_id,status:'en_route'}});}
+export async function markArrived(assignment_id:string){return supabase.functions.invoke('update-assignment-status',{body:{assignment_id,status:'arrived'}});}
+export async function startJob(assignment_id:string){return supabase.functions.invoke('update-assignment-status',{body:{assignment_id,status:'in_progress'}});}
