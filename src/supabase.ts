@@ -28,6 +28,7 @@ export async function startJob(assignment_id:string){return supabase.functions.i
 
 export async function getNotifications(){return supabase.from('notifications').select('id,type,title,body,read_at,created_at,booking_id').order('created_at',{ascending:false}).limit(50);}
 export async function markNotificationRead(id:string){return supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id);}
+export async function markAllNotificationsRead(){const{data:{user}}=await supabase.auth.getUser();if(!user)return{data:null,error:new Error('Please sign in first')};return supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('user_id',user.id).is('read_at',null).select('id');}
 
 export async function getCleanerProfile(){const{data:{user}}=await supabase.auth.getUser();if(!user)return{data:null,error:new Error('Please sign in first')};return supabase.from('cleaner_profiles').select('user_id,rating,review_count,hourly_rate,background_check_verified,is_available,service_radius_miles').eq('user_id',user.id).single();}
 export async function setCleanerAvailability(is_available:boolean){const{data:{user}}=await supabase.auth.getUser();if(!user)return{data:null,error:new Error('Please sign in first')};return supabase.from('cleaner_profiles').update({is_available}).eq('user_id',user.id).select().single();}
