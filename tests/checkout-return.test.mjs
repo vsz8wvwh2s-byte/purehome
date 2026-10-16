@@ -23,3 +23,5 @@ test('non-checkout query and hash are never modified',()=>{assert.deepEqual(chec
 test('cancelled callback ignores even a valid booking ID',()=>{assert.equal(checkoutReturn('?payment=cancelled&booking_id='+id,'/').bookingId,'')});
 
 test('checkout callback cleanup preserves repeated unrelated query values',()=>{const result=checkoutReturn('?source=one&payment=success&source=two&booking_id='+id,'/purehome/','#faq');assert.equal(result.url,'/purehome/?source=one&source=two#faq')});
+
+test('booking references reject whitespace braces and encoded separators',()=>{for(const value of ['%20'+id,id+'%20','%7B'+id+'%7D',id.replaceAll('-','%2F')]){const result=checkoutReturn('?payment=success&booking_id='+value,'/');assert.equal(result.bookingId,'')}});
