@@ -54,6 +54,10 @@ jobs:
             echo "TypeScript source and log files must not be published" >&2
             exit 1
           fi
+          if [ -n "$(find dist -type f \( -name '.npmrc' -o -name '.netrc' -o -name '.htpasswd' -o -name 'package.json' -o -name 'package-lock.json' -o -name 'pnpm-lock.yaml' -o -name 'yarn.lock' \) -print -quit)" ]; then
+            echo "Package manifests, lockfiles, or credential configuration must not be published" >&2
+            exit 1
+          fi
           if [ -n "$(find dist -type l -print -quit)" ]; then
             echo "Symbolic links are not permitted in published assets" >&2
             exit 1
