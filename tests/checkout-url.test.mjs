@@ -18,6 +18,12 @@ test('rejects unsafe checkout redirect destinations', () => {
     'https://user:pass@checkout.stripe.com/c/pay/123',
     'https://checkout.stripe.com:8443/c/pay/123',
     'https://checkout.stripe.com/other/path',
+    'https://checkout.stripe.com/c/../evil',
+    'https://checkout.stripe.com/c/%2e%2e/evil',
+    'https://checkout.stripe.com/c/pay/%2f%2fevil.example',
+    'https://checkout.stripe.com/c/pay/123%5cfoo',
+    'https://checkout.stripe.com/c/pay/',
+    'https://checkout.stripe.com/c/pay/123;redirect=https://evil.example',
     'https://checkout.stripe.com/c/pay/123#fragment'
   ]) {
     assert.equal(verifiedStripeCheckoutUrl(value), null, String(value));
