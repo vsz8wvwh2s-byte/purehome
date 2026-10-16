@@ -37,6 +37,24 @@ test('rejects missing CSS even when JavaScript is present', () => {
   assert.notEqual(result.status, 0);
 });
 
+test('accepts relative asset paths resolved under the Pages base', () => {
+  const result = verify('<script type="module" src="./assets/app.js"></script>');
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test('rejects protocol-relative, traversal and encoded asset paths', () => {
+  for (const src of [
+    '//evil.example/purehome/assets/app.js',
+    '/purehome/../assets/app.js',
+    '/purehome/%2e%2e/assets/app.js',
+    '/purehome/assets/%2e%2e%2fsecret.js',
+    '/purehome/assets/%2Fapp.js'
+  ]) {
+    const result = verify('<script src="' + src + '"></script>');
+    assert.notEqual(result.status, 0, src);
+  }
+});
+
 test('rejects missing, empty, external and wrong-base bundles', () => {
   for (const html of [
     '<script src="/purehome/assets/missing.js"></script>',
