@@ -18,3 +18,6 @@ test('missing or empty booking ID is always an empty string',()=>{for(const sear
 test('encoded duplicate callback keys cannot bypass ambiguity checks',()=>{assert.equal(checkoutReturn('?payment=success&%70ayment=cancelled','/').payment,null);assert.equal(checkoutReturn('?payment=success&booking_id='+id+'&%62ooking_id='+id,'/').bookingId,'')});
 
 test('booking UUID must have a valid version and variant',()=>{for(const invalid of ['123e4567-e89b-02d3-a456-426614174000','123e4567-e89b-12d3-7456-426614174000'])assert.equal(checkoutReturn('?payment=success&booking_id='+invalid,'/').bookingId,'')});
+
+test('non-checkout query and hash are never modified',()=>{assert.deepEqual(checkoutReturn('?source=summer&booking_id='+id,'/purehome/','#pricing'),{payment:null,bookingId:'',url:null})});
+test('cancelled callback ignores even a valid booking ID',()=>{assert.equal(checkoutReturn('?payment=cancelled&booking_id='+id,'/').bookingId,'')});
