@@ -58,7 +58,10 @@ jobs:
             echo "Symbolic links are not permitted in published assets" >&2
             exit 1
           fi
-          find dist/assets -maxdepth 1 -type f -name '*.js' -size +0c | grep -q .
+          if [ -z "$(find dist/assets -maxdepth 1 -type f -name '*.js' -size +0c -print -quit)" ]; then
+            echo "Production JavaScript bundle is missing" >&2
+            exit 1
+          fi
           if find dist -type f -name '*.map' | grep -q .; then
             echo "Source maps must not be published to GitHub Pages" >&2
             exit 1
