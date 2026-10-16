@@ -14,3 +14,5 @@ test('payment status matching is strict',()=>{for(const value of ['SUCCESS','suc
 test('valid uppercase booking UUID is accepted',()=>{const upper=id.toUpperCase();assert.equal(checkoutReturn('?payment=success&booking_id='+upper,'/').bookingId,upper)});
 
 test('missing or empty booking ID is always an empty string',()=>{for(const search of ['?payment=success','?payment=success&booking_id=']){const result=checkoutReturn(search,'/');assert.equal(result.bookingId,'');assert.equal(typeof result.bookingId,'string')}});
+
+test('encoded duplicate callback keys cannot bypass ambiguity checks',()=>{assert.equal(checkoutReturn('?payment=success&%70ayment=cancelled','/').payment,null);assert.equal(checkoutReturn('?payment=success&booking_id='+id+'&%62ooking_id='+id,'/').bookingId,'')});
