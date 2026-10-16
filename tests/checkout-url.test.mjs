@@ -8,6 +8,11 @@ test('accepts a Stripe hosted Checkout payment URL', () => {
   assert.equal(verifiedStripeCheckoutUrl('https://checkout.stripe.com/c/pay/cs_test_123'), 'https://checkout.stripe.com/c/pay/cs_test_123');
 });
 
+test('preserves Stripe session query parameters and fragments', () => {
+  const url = 'https://checkout.stripe.com/c/pay/cs_test_123?prefilled_email=customer%40example.com#fidkdWxOYHwnPyd1blpxYHZxWjA0T';
+  assert.equal(verifiedStripeCheckoutUrl(url), url);
+});
+
 test('rejects unsafe checkout redirect destinations', () => {
   for (const value of [
     null, undefined, 123, '', 'javascript:alert(1)',
