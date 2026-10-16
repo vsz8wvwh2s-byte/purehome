@@ -7,3 +7,8 @@ test('cancelled checkout removes callback parameters',()=>{assert.deepEqual(chec
 test('invalid and duplicate booking references cannot trigger lookup',()=>{for(const search of ['?payment=success&booking_id=bad','?payment=success&booking_id='+id+'&booking_id=bad'])assert.equal(checkoutReturn(search,'/').bookingId,'')});
 test('duplicate payment statuses are not accepted',()=>{assert.deepEqual(checkoutReturn('?payment=success&payment=cancelled','/'),{payment:null,bookingId:'',url:null})});
 test('unrecognized query remains unchanged',()=>{assert.equal(checkoutReturn('?source=ad','/').url,null)});
+
+test('encoded checkout keys are recognized and removed',()=>{const result=checkoutReturn('?%70ayment=success&booking_id=bad&ref=hello%20world','/purehome/','#top');assert.equal(result.payment,'success');assert.equal(result.bookingId,'');assert.equal(result.url,'/purehome/?ref=hello+world#top')});
+test('duplicate identical payment values are still ambiguous',()=>{assert.equal(checkoutReturn('?payment=success&payment=success','/').payment,null)});
+test('payment status matching is strict',()=>{for(const value of ['SUCCESS','success%20','refunded',''])assert.equal(checkoutReturn('?payment='+value,'/').payment,null)});
+test('valid uppercase booking UUID is accepted',()=>{const upper=id.toUpperCase();assert.equal(checkoutReturn('?payment=success&booking_id='+upper,'/').bookingId,upper)});
