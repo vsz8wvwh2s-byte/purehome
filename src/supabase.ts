@@ -51,12 +51,14 @@ export async function getMyReviewedBookingIds(){
  if(!user)return{data:null,error:new Error('Please sign in first')};
  const pageSize=500;
  const reviewed:{booking_id:string}[]=[];
+ const seen=new Set<string>();
  for(let offset=0;offset<100000;offset+=pageSize){
   const result=await supabase.from('reviews').select('booking_id').eq('customer_id',user.id).order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+pageSize-1);
   if(result.error)return{data:null,error:result.error};
   if(!Array.isArray(result.data))return{data:null,error:new Error('Unable to verify complete review history')};
   if(result.data.some(row=>typeof row?.booking_id!=='string'||row.booking_id.length===0))return{data:null,error:new Error('Review history contains invalid booking identifiers')};
-  reviewed.push(...result.data);
+  if(result.data.some(row=>seen.has(row.booking_id)))return{data:null,error:new Error('Review history contains duplicate records across pages')};
+  for(const row of result.data){seen.add(row.booking_id);reviewed.push(row)}
   if(result.data.length<pageSize)return{data:reviewed,error:null};
  }
  return{data:null,error:new Error('Review history exceeds the verification limit')};
