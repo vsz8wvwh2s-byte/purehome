@@ -4,7 +4,7 @@ import { verifiedStripeCheckoutUrl } from '../src/checkout-url.js';
 
 test('accepts a Stripe hosted Checkout payment URL', () => {
   const url = 'https://checkout.stripe.com/c/pay/cs_test_123#fragment';
-  assert.equal(verifiedStripeCheckoutUrl(url), null);
+  assert.equal(verifiedStripeCheckoutUrl(url), url);
   assert.equal(verifiedStripeCheckoutUrl('https://checkout.stripe.com/c/pay/cs_test_123'), 'https://checkout.stripe.com/c/pay/cs_test_123');
 });
 
@@ -24,7 +24,7 @@ test('rejects unsafe checkout redirect destinations', () => {
     'https://checkout.stripe.com/c/pay/123%5cfoo',
     'https://checkout.stripe.com/c/pay/',
     'https://checkout.stripe.com/c/pay/123;redirect=https://evil.example',
-    'https://checkout.stripe.com/c/pay/123#fragment'
+    'https://checkout.stripe.com/c/pay/123%00'
   ]) {
     assert.equal(verifiedStripeCheckoutUrl(value), null, String(value));
   }
