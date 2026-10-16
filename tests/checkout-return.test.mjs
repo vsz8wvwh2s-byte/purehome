@@ -12,3 +12,5 @@ test('encoded checkout keys are recognized and removed',()=>{const result=checko
 test('duplicate identical payment values are still ambiguous',()=>{assert.equal(checkoutReturn('?payment=success&payment=success','/').payment,null)});
 test('payment status matching is strict',()=>{for(const value of ['SUCCESS','success%20','refunded',''])assert.equal(checkoutReturn('?payment='+value,'/').payment,null)});
 test('valid uppercase booking UUID is accepted',()=>{const upper=id.toUpperCase();assert.equal(checkoutReturn('?payment=success&booking_id='+upper,'/').bookingId,upper)});
+
+test('missing or empty booking ID is always an empty string',()=>{for(const search of ['?payment=success','?payment=success&booking_id=']){const result=checkoutReturn(search,'/');assert.equal(result.bookingId,'');assert.equal(typeof result.bookingId,'string')}});
