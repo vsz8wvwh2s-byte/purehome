@@ -3,7 +3,7 @@ import { resolve, sep } from 'node:path';
 
 const distDirectory = resolve(process.argv[2] || 'dist');
 const html = readFileSync(resolve(distDirectory, 'index.html'), 'utf8');
-const references = [...html.matchAll(/<(?:script|link)\b[^>]*?\b(?:src|href)=["']([^"']+)["'][^>]*>/gi)]
+const references = [...html.matchAll(/<(?:script|link)\b[^>]*?\b(?:src|href)\s*=\s*["']([^"']+)["'][^>]*>/gi)]
   .map(match => match[1])
   .filter(url => /\.(?:js|css)(?:[?#]|$)/i.test(url));
 
