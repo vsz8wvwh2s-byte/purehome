@@ -25,6 +25,18 @@ test('accepts a local nonempty JavaScript bundle', () => {
   assert.equal(result.status, 0, result.stderr);
 });
 
+test('accepts a homepage with both JavaScript and CSS assets', () => {
+  const html = '<script type="module" src="/purehome/assets/app.js"></script><link rel="stylesheet" href="/purehome/assets/app.css">';
+  const result = verify(html, { 'assets/app.js': 'console.log("ok")', 'assets/app.css': 'body{margin:0}' });
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test('rejects missing CSS even when JavaScript is present', () => {
+  const html = '<script src="/purehome/assets/app.js"></script><link rel="stylesheet" href="/purehome/assets/missing.css">';
+  const result = verify(html);
+  assert.notEqual(result.status, 0);
+});
+
 test('rejects missing, empty, external and wrong-base bundles', () => {
   for (const html of [
     '<script src="/purehome/assets/missing.js"></script>',
