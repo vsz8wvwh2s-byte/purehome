@@ -20,6 +20,9 @@ for (const reference of references) {
   if (!pathname.startsWith(base)) {
     throw new Error('Asset path is outside the GitHub Pages base: ' + pathname);
   }
+  if (/%(?:2f|5c|00)/i.test(pathname)) {
+    throw new Error('Encoded path separator or null byte is not allowed: ' + pathname);
+  }
   const relative = decodeURIComponent(pathname.slice(base.length));
   if (!relative || relative.split('/').includes('..')) {
     throw new Error('Invalid asset path: ' + pathname);
