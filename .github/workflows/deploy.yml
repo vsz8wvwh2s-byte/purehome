@@ -37,6 +37,8 @@ jobs:
           done
       - run: npm test
       - run: npm run build
+      - name: Smoke test homepage asset references
+        run: node scripts/verify-pages-assets.mjs
       - name: Verify production bundle
         run: |
           set -euo pipefail
