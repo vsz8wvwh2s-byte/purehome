@@ -40,6 +40,10 @@ jobs:
         run: |
           test -s dist/index.html
           test -d dist/assets
+          if find dist -type l | grep -q .; then
+            echo "Symbolic links are not permitted in published assets" >&2
+            exit 1
+          fi
           find dist/assets -maxdepth 1 -type f -name '*.js' -size +0c | grep -q .
           if grep -R -E 'sk_(live|test)_[A-Za-z0-9]+|rk_(live|test)_[A-Za-z0-9]+|whsec_[A-Za-z0-9]+|sb_secret_[A-Za-z0-9]+|SUPABASE_SERVICE_ROLE_KEY[[:space:]]*[:=][[:space:]]*[A-Za-z0-9._-]+' dist; then
             echo "Potential secret key detected in published assets" >&2
