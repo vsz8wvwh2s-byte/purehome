@@ -21,3 +21,5 @@ test('booking UUID must have a valid version and variant',()=>{for(const invalid
 
 test('non-checkout query and hash are never modified',()=>{assert.deepEqual(checkoutReturn('?source=summer&booking_id='+id,'/purehome/','#pricing'),{payment:null,bookingId:'',url:null})});
 test('cancelled callback ignores even a valid booking ID',()=>{assert.equal(checkoutReturn('?payment=cancelled&booking_id='+id,'/').bookingId,'')});
+
+test('checkout callback cleanup preserves repeated unrelated query values',()=>{const result=checkoutReturn('?source=one&payment=success&source=two&booking_id='+id,'/purehome/','#faq');assert.equal(result.url,'/purehome/?source=one&source=two#faq')});
