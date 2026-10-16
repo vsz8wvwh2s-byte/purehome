@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { verifiedStripeCheckoutUrl } from '../src/checkout-url.js';
+
+test('accepts a Stripe hosted Checkout payment URL', () => {
+  const url = 'https://checkout.stripe.com/c/pay/cs_test_123#fragment';
+  assert.equal(verifiedStripeCheckoutUrl(url), null);
+  assert.equal(verifiedStripeCheckoutUrl('https://checkout.stripe.com/c/pay/cs_test_123'), 'https://checkout.stripe.com/c/pay/cs_test_123');
+});
+
+test('rejects unsafe checkout redirect destinations', () => {
+  for (const value of [
+    null, undefined, 123, '', 'javascript:alert(1)',
+    'http://checkout.stripe.com/c/pay/123',
+    'https://checkout.stripe.com.evil.example/c/pay/123',
+    'https://evil.example/c/pay/123',
+    'https://checkout.stripe.com@evil.example/c/pay/123',
+    'https://user:pass@checkout.stripe.com/c/pay/123',
+    'https://checkout.stripe.com:8443/c/pay/123',
+    'https://checkout.stripe.com/other/path',
+    'https://checkout.stripe.com/c/pay/123#fragment'
+  ]) {
+    assert.equal(verifiedStripeCheckoutUrl(value), null, String(value));
+  }
+});
