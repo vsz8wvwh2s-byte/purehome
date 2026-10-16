@@ -37,6 +37,11 @@ test('rejects missing CSS even when JavaScript is present', () => {
   assert.notEqual(result.status, 0);
 });
 
+test('recognizes whitespace around quoted asset attributes', () => {
+  const result = verify('<script type="module" src = "/purehome/assets/app.js"></script>');
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test('accepts relative asset paths resolved under the Pages base', () => {
   const result = verify('<script type="module" src="./assets/app.js"></script>');
   assert.equal(result.status, 0, result.stderr);
