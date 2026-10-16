@@ -45,6 +45,14 @@ jobs:
             echo "Environment files or private key files must not be published" >&2
             exit 1
           fi
+          if find dist -type d \( -name '.git' -o -name 'node_modules' -o -name '.github' \) | grep -q .; then
+            echo "Development or repository directories must not be published" >&2
+            exit 1
+          fi
+          if find dist -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.log' \) | grep -q .; then
+            echo "TypeScript source and log files must not be published" >&2
+            exit 1
+          fi
           if find dist -type l | grep -q .; then
             echo "Symbolic links are not permitted in published assets" >&2
             exit 1
