@@ -39,6 +39,7 @@ jobs:
       - run: npm run build
       - name: Verify production bundle
         run: |
+          set -euo pipefail
           test -s dist/index.html
           test -d dist/assets
           if find dist -type f \( -name '.env' -o -name '.env.*' -o -name '*.pem' -o -name '*.key' \) | grep -q .; then
