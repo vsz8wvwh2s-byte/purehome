@@ -45,6 +45,10 @@ jobs:
             exit 1
           fi
           find dist/assets -maxdepth 1 -type f -name '*.js' -size +0c | grep -q .
+          if find dist -type f -name '*.map' | grep -q .; then
+            echo "Source maps must not be published to GitHub Pages" >&2
+            exit 1
+          fi
           if grep -R -E 'sk_(live|test)_[A-Za-z0-9]+|rk_(live|test)_[A-Za-z0-9]+|whsec_[A-Za-z0-9]+|sb_secret_[A-Za-z0-9]+|SUPABASE_SERVICE_ROLE_KEY[[:space:]]*[:=][[:space:]]*[A-Za-z0-9._-]+' dist; then
             echo "Potential secret key detected in published assets" >&2
             exit 1
