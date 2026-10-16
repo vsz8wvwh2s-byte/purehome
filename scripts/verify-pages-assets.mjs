@@ -1,7 +1,8 @@
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 
-const html = readFileSync('dist/index.html', 'utf8');
+const distDirectory = resolve(process.argv[2] || 'dist');
+const html = readFileSync(resolve(distDirectory, 'index.html'), 'utf8');
 const references = [...html.matchAll(/<(?:script|link)\b[^>]*?\b(?:src|href)=["']([^"']+)["'][^>]*>/gi)]
   .map(match => match[1])
   .filter(url => /\.(?:js|css)(?:[?#]|$)/i.test(url));
@@ -23,8 +24,8 @@ for (const reference of references) {
   if (!relative || relative.split('/').includes('..')) {
     throw new Error('Invalid asset path: ' + pathname);
   }
-  const target = resolve('dist', relative);
-  if (!target.startsWith(resolve('dist') + sep) || !existsSync(target) || !statSync(target).isFile() || statSync(target).size === 0) {
+  const target = resolve(distDirectory, relative);
+  if (!target.startsWith(distDirectory + sep) || !existsSync(target) || !statSync(target).isFile() || statSync(target).size === 0) {
     throw new Error('Referenced asset is missing or empty: ' + pathname);
   }
 }
