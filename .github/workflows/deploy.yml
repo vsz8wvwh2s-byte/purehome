@@ -42,19 +42,19 @@ jobs:
           set -euo pipefail
           test -s dist/index.html
           test -d dist/assets
-          if find dist -type f \( -name '.env' -o -name '.env.*' -o -name '*.pem' -o -name '*.key' \) | grep -q .; then
+          if [ -n "$(find dist -type f \( -name '.env' -o -name '.env.*' -o -name '*.pem' -o -name '*.key' \) -print -quit)" ]; then
             echo "Environment files or private key files must not be published" >&2
             exit 1
           fi
-          if find dist -type d \( -name '.git' -o -name 'node_modules' -o -name '.github' \) | grep -q .; then
+          if [ -n "$(find dist -type d \( -name '.git' -o -name 'node_modules' -o -name '.github' \) -print -quit)" ]; then
             echo "Development or repository directories must not be published" >&2
             exit 1
           fi
-          if find dist -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.log' \) | grep -q .; then
+          if [ -n "$(find dist -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.log' \) -print -quit)" ]; then
             echo "TypeScript source and log files must not be published" >&2
             exit 1
           fi
-          if find dist -type l | grep -q .; then
+          if [ -n "$(find dist -type l -print -quit)" ]; then
             echo "Symbolic links are not permitted in published assets" >&2
             exit 1
           fi
@@ -62,7 +62,7 @@ jobs:
             echo "Production JavaScript bundle is missing" >&2
             exit 1
           fi
-          if find dist -type f -name '*.map' | grep -q .; then
+          if [ -n "$(find dist -type f -name '*.map' -print -quit)" ]; then
             echo "Source maps must not be published to GitHub Pages" >&2
             exit 1
           fi
