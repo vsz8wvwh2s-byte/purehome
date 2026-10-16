@@ -57,7 +57,7 @@ export async function getMyReviewedBookingIds(){
   if(result.error)return{data:null,error:result.error};
   if(!Array.isArray(result.data))return{data:null,error:new Error('Unable to verify complete review history')};
   if(result.data.some(row=>typeof row?.booking_id!=='string'||row.booking_id.length===0))return{data:null,error:new Error('Review history contains invalid booking identifiers')};
-  if(result.data.some(row=>seen.has(row.booking_id)))return{data:null,error:new Error('Review history contains duplicate records across pages')};
+  if(result.data.some(row=>seen.has(row.booking_id))||new Set(result.data.map(row=>row.booking_id)).size!==result.data.length)return{data:null,error:new Error('Review history contains duplicate booking records')};
   for(const row of result.data){seen.add(row.booking_id);reviewed.push(row)}
   if(result.data.length<pageSize)return{data:reviewed,error:null};
  }
