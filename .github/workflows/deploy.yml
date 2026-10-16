@@ -40,6 +40,10 @@ jobs:
         run: |
           test -s dist/index.html
           test -d dist/assets
+          if find dist -type f \( -name '.env' -o -name '.env.*' -o -name '*.pem' -o -name '*.key' \) | grep -q .; then
+            echo "Environment files or private key files must not be published" >&2
+            exit 1
+          fi
           if find dist -type l | grep -q .; then
             echo "Symbolic links are not permitted in published assets" >&2
             exit 1
