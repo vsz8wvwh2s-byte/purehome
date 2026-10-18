@@ -3,6 +3,7 @@ import { helpTopics, filterHelpTopics } from '../help-topics.js';
 
 export default function SupportFAQ() {
   const [query, setQuery] = useState('');
+  const [showTips, setShowTips] = useState(false);
   const [expanded, setExpanded] = useState<string[]>([]);
   const filtered = filterHelpTopics(helpTopics, query);
   const allVisibleExpanded = filtered.length > 0 && filtered.every(item => expanded.includes(item.question));
