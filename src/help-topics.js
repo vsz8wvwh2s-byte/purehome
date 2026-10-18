@@ -6,6 +6,9 @@ export const helpTopics = [
   { question: 'What happens after I book?', answer: 'You can follow your appointment status in My bookings. Cleaner assignment and status updates will appear when available.' },
   { question: 'Can I change my appointment time?', answer: 'Check My bookings for available options. If changing the appointment is not offered, review the cancellation terms before making a new booking.' },
   { question: 'What should I do before the cleaner arrives?', answer: 'Make sure the cleaning address and access instructions are accurate. Secure valuables and pets, and keep areas that need cleaning accessible.' },
+  { question: 'How can I update my cleaning address?', answer: 'Sign in and open Addresses to manage your saved locations. Check the address shown on an existing booking before assuming changes will apply to it.' },
+  { question: 'Where can I see notifications?', answer: 'Sign in and open Notifications to review available booking and cleaner updates.' },
+  { question: 'What if a cleaner is delayed?', answer: 'Check My bookings and Notifications for the latest available status. Avoid sharing private payment information while arranging any follow-up.' },
   { question: 'What if I cannot sign in?', answer: 'Confirm you are using the email address linked to your account. Check for typing mistakes and use the available sign-in or recovery options.' },
   { question: 'How do I leave a review?', answer: 'After a cleaning is completed, open My bookings and use the review option if it is available for that appointment.' }
 ];
