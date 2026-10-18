@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { helpTopics, filterHelpTopics } from '../help-topics.js';
 
-export default function SupportFAQ() {
+type SupportFAQProps = { onBrowseServices: () => void; onMyBookings: () => void };
+
+export default function SupportFAQ({ onBrowseServices, onMyBookings }: SupportFAQProps) {
   const [query, setQuery] = useState('');
   const [showTips, setShowTips] = useState(false);
   const [expanded, setExpanded] = useState<string[]>([]);
@@ -13,6 +15,10 @@ export default function SupportFAQ() {
       <p className="eyebrow">Help center</p>
       <h2 id="support-heading">Frequently asked questions</h2>
       <p>Answers to common questions about your PureHome cleaning.</p>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
+        <button type="button" className="switch" onClick={onBrowseServices}>Browse cleaning services</button>
+        <button type="button" className="switch" onClick={onMyBookings}>My bookings</button>
+      </div>
       <button type="button" className="switch" aria-expanded={showTips} aria-controls="support-tips" onClick={() => setShowTips(value => !value)}>{showTips ? "Hide booking tips" : "Show booking tips"}</button>
       {showTips && <div id="support-tips"><p>Before booking, have your preferred date, cleaning address, and service choice ready. Review the booking details before submitting.</p></div>}
       <label htmlFor="support-search">Search help topics</label>
