@@ -38,3 +38,9 @@ test('saved booking navigation opens bookings, not payment confirmation', () => 
   const app = readFileSync(new URL('../src/main.tsx', import.meta.url), 'utf8');
   assert.match(app, /viewBookings=\{\(\)=>setView\('bookings'\)\}/);
 });
+
+test('unexpected booking preparation errors release loading state', () => {
+  assert.match(form, /We could not finish preparing your booking/);
+  assert.match(form, /Check My bookings before trying again/);
+  assert.match(form, /setBusy\(false\);\s*\}\s*\}\s*return <section/);
+});
