@@ -12,6 +12,8 @@ export default function SupportFAQ() {
       <p className="eyebrow">Help center</p>
       <h2 id="support-heading">Frequently asked questions</h2>
       <p>Answers to common questions about your PureHome cleaning.</p>
+      <button type="button" className="switch" aria-expanded={showTips} aria-controls="support-tips" onClick={() => setShowTips(value => !value)}>{showTips ? "Hide booking tips" : "Show booking tips"}</button>
+      {showTips && <div id="support-tips"><p>Before booking, have your preferred date, cleaning address, and service choice ready. Review the booking details before submitting.</p></div>}
       <label htmlFor="support-search">Search help topics</label>
       <input id="support-search" type="search" value={query}
         onChange={event => setQuery(event.target.value)}
