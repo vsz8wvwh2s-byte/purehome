@@ -14,7 +14,7 @@ const questions: FAQ[] = [
 export default function SupportFAQ() {
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState<string[]>([]);
-  const terms = query.trim().toLocaleLowerCase().split(/\\s+/).filter(Boolean);
+  const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   const filtered = questions.filter(item => {
     const text = (item.question + ' ' + item.answer).toLocaleLowerCase();
     return terms.every(term => text.includes(term));
