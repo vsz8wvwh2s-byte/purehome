@@ -40,3 +40,9 @@ test('FAQ search handles multiple words, case and whitespace', () => {
   assert.equal(filterHelpTopics(helpTopics, 'no-such-topic').length, 0);
   assert.equal(filterHelpTopics(helpTopics, '').length, helpTopics.length);
 });
+
+test('FAQ search does not mutate the original topics', () => {
+  const original = JSON.stringify(helpTopics);
+  filterHelpTopics(helpTopics, 'cleaning');
+  assert.equal(JSON.stringify(helpTopics), original);
+});
