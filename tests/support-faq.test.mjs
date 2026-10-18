@@ -18,6 +18,7 @@ test('help center provides accessible search and results feedback', () => {
   assert.match(faq, /id="support-search"/);
   assert.match(faq, /type="search"/);
   assert.match(faq, /role="status"/);
+  assert.match(faq, /aria-live="polite"/);
   assert.match(faq, /No matching topics/);
   assert.match(faq, /Clear search/);
 });
