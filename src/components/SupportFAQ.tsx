@@ -14,9 +14,11 @@ const questions: FAQ[] = [
 export default function SupportFAQ() {
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState<string[]>([]);
-  const filtered = questions.filter(item =>
-    (item.question + ' ' + item.answer).toLowerCase().includes(query.trim().toLowerCase())
-  );
+  const terms = query.trim().toLocaleLowerCase().split(/\\s+/).filter(Boolean);
+  const filtered = questions.filter(item => {
+    const text = (item.question + ' ' + item.answer).toLocaleLowerCase();
+    return terms.every(term => text.includes(term));
+  });
   const allVisibleExpanded = filtered.length > 0 && filtered.every(item => expanded.includes(item.question));
 
   return (
