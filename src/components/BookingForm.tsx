@@ -30,7 +30,9 @@ export default function BookingForm({service,user,back,account,viewBookings}:Pro
     if(validation){setMsg(validation);return}
     const start=new Date(`${date}T${time}:00`);
     if(start.getTime()<Date.now()+leadHours*3600000){setMsg(`Please choose a time at least ${leadHours} hours from now.`);return}
-    setBusy(true);setMsg('');let aid=addressId;
+    setBusy(true);setMsg('');
+    try{
+    let aid=addressId;
     if(aid&&savedCoverage[aid]!==true){setMsg('This saved address is outside PureHome’s current service area. Choose another address or add a new one.');setBusy(false);return}
     if(!aid){const coverage=await checkServiceZip(zip.trim());if(coverage.error){setMsg('We could not check service availability right now. Please try again.');setBusy(false);return}if(!coverage.data?.available){setMsg('This address is outside PureHome’s current 100-mile service area around 28025.');setBusy(false);return}}
     if(!aid){const r=await addAddress({address_line_1:line1.trim(),city:city.trim(),state:state.trim().toUpperCase(),postal_code:zip.trim()});if(r.error){setMsg(r.error.message);setBusy(false);return}aid=r.data.id}
@@ -46,6 +48,10 @@ export default function BookingForm({service,user,back,account,viewBookings}:Pro
       if(checkoutUrl){window.location.assign(checkoutUrl);return}
       setMsg('Booking saved. Secure checkout is not available yet, and no charge was made. You can retry payment.');
     }catch{setMsg('Booking saved, but checkout could not start. You can retry payment without creating another booking.')}finally{setBusy(false)}
+    }catch{
+      setMsg('We could not finish preparing your booking. Check My bookings before trying again.');
+      setBusy(false);
+    }
   }
   return <section className="booking"><button className="back" onClick={back}>← Back</button><div className="bookingGrid"><div><p className="eyebrow">Book your clean</p><h1>{service.name}</h1><p>{service.description}</p>{user&&addresses.length>0&&<label>Saved address<select value={addressId} onChange={e=>setAddressId(e.target.value)}><option value="">Add a new address</option>{addresses.map(a=><option key={a.id} value={a.id} disabled={savedCoverage[a.id]!==true}>{a.address_line_1}, {a.city}{savedCoverage[a.id]===false?' — outside service area':savedCoverage[a.id]===undefined||savedCoverage[a.id]===null?' — coverage unavailable':''}</option>)}</select></label>}{(!user||!addressId)&&<><label>Street address<input autoComplete="street-address" value={line1} onChange={e=>setLine1(e.target.value)} placeholder="123 Main Street"/></label><div className="fieldRow"><label>City<input autoComplete="address-level2" value={city} onChange={e=>setCity(e.target.value)}/></label><label>State<input autoComplete="address-level1" value={state} maxLength={2} onChange={e=>setState(e.target.value.toUpperCase())}/></label><label>ZIP<input autoComplete="postal-code" inputMode="numeric" value={zip} onChange={e=>setZip(e.target.value)}/></label></div></>}<div className="fieldRow"><label>Date<input type="date" min={minimumBookingDate()} value={date} onChange={e=>setDate(e.target.value)}/></label><label>Start time<input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label></div><label>Notes<textarea maxLength={1000} value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Anything your cleaner should know?"/></label>{msg&&<p className="formMsg" role="alert">{msg}</p>}</div><aside><h3>Booking summary</h3><div className="summary"><span>{service.name}</span><strong>${service.base_price}</strong></div><div className="summary"><span>Estimated time</span><strong>{Math.round(service.estimated_minutes/60)} hr</strong></div><button className="primary full" disabled={busy||(!pendingBookingId&&coverageLoading)} onClick={submit}>{busy?'Preparing checkout…':pendingBookingId?'Retry secure checkout':coverageLoading?'Checking service area…':user?'Continue to payment':'Create account / Sign in'}</button>{pendingBookingId?<><p role="status">Your booking has been saved. Retry payment here without creating another appointment.</p><button type="button" className="switch" onClick={viewBookings}>View saved booking</button></>:<small>Bookings require at least {leadHours} hours’ notice. You’ll review and pay securely on the next step.</small>}</aside></div></section>
 }
