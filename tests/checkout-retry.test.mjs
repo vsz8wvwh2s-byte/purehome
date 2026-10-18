@@ -23,7 +23,8 @@ test('checkout exceptions keep retry path available', () => {
 });
 
 test('saved booking can be viewed after checkout fails', () => {
-  assert.match(form, /onClick=\{\(\)=>success\(pendingBookingId\)\}/);
+  assert.match(form, /onClick=\{viewBookings\}/);
+  assert.match(form, /viewBookings:\(\)=>void/);
   assert.match(form, /View saved booking/);
   assert.match(form, /Your booking has been saved/);
 });
@@ -31,4 +32,9 @@ test('saved booking can be viewed after checkout fails', () => {
 test('coverage loading does not disable payment retry', () => {
   assert.match(form, /disabled=\{busy\|\|\(!pendingBookingId&&coverageLoading\)\}/);
   assert.ok(form.indexOf("pendingBookingId?'Retry secure checkout'") < form.indexOf("coverageLoading?'Checking service area…'"));
+});
+
+test('saved booking navigation opens bookings, not payment confirmation', () => {
+  const app = readFileSync(new URL('../src/main.tsx', import.meta.url), 'utf8');
+  assert.match(app, /viewBookings=\{\(\)=>setView\('bookings'\)\}/);
 });
