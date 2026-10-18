@@ -46,3 +46,10 @@ test('FAQ search does not mutate the original topics', () => {
   filterHelpTopics(helpTopics, 'cleaning');
   assert.equal(JSON.stringify(helpTopics), original);
 });
+
+test('booking tips toggle is accessible and explains preparation', () => {
+  assert.match(faq, /aria-expanded=\{showTips\}/);
+  assert.match(faq, /aria-controls="support-tips"/);
+  assert.match(faq, /id="support-tips"/);
+  assert.match(faq, /preferred date, cleaning address, and service choice/);
+});
