@@ -14,6 +14,7 @@ const questions: FAQ[] = [
 export default function SupportFAQ() {
   const [query, setQuery] = useState('');
   const [openAll, setOpenAll] = useState(false);
+  const [expanded, setExpanded] = useState<string[]>([]);
   const filtered = questions.filter(item =>
     (item.question + ' ' + item.answer).toLowerCase().includes(query.trim().toLowerCase())
   );
@@ -28,11 +29,11 @@ export default function SupportFAQ() {
         onChange={event => setQuery(event.target.value)}
         placeholder="Search bookings, payments, cancellations..."
         style={{ display: 'block', width: '100%', maxWidth: 480, padding: 12, margin: '12px 0 24px' }} />
-      <button type="button" className="switch" onClick={() => setOpenAll(value => !value)}>{openAll ? "Collapse all answers" : "Expand all answers"}</button>
+      <button type="button" className="switch" onClick={() => { const next = !openAll; setOpenAll(next); setExpanded(next ? questions.map(item => item.question) : []); }}>{openAll ? "Collapse all answers" : "Expand all answers"}</button>
       <div aria-live="polite">
         {filtered.length === 0 ? <p>No matching topics. Try a different search.</p> :
           filtered.map(item => (
-            <details key={item.question} open={openAll ? true : undefined} style={{ padding: '16px 0', borderBottom: '1px solid #d9e5e1' }}>
+            <details key={item.question} open={expanded.includes(item.question)} onToggle={event => { const isOpen = event.currentTarget.open; setExpanded(previous => isOpen ? (previous.includes(item.question) ? previous : [...previous, item.question]) : previous.filter(question => question !== item.question)); }} style={{ padding: '16px 0', borderBottom: '1px solid #d9e5e1' }}>
               <summary style={{ cursor: 'pointer', fontWeight: 700 }}>{item.question}</summary>
               <p>{item.answer}</p>
             </details>
