@@ -48,6 +48,7 @@ test('FAQ search does not mutate the original topics', () => {
 });
 
 test('booking tips toggle is accessible and explains preparation', () => {
+  assert.match(faq, /const \[showTips, setShowTips\] = useState\(false\)/);
   assert.match(faq, /aria-expanded=\{showTips\}/);
   assert.match(faq, /aria-controls="support-tips"/);
   assert.match(faq, /id="support-tips"/);
