@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { addAddress, checkServiceZip, createBooking, createPayment, getAddresses, getBusinessSettings } from '../supabase';
 import { minimumBookingDate, validateBooking } from '../lib/validation';
+import { verifiedStripeCheckoutUrl } from '../checkout-url.js';
 
 export type Service = { id:string; name:string; description:string; base_price:number; estimated_minutes:number };
 
@@ -18,10 +19,10 @@ export default function BookingForm({service,user,back,account,viewBookings}:Pro
       setBusy(true);setMsg('');
       try{
         const payment=await createPayment(pendingBookingId);
-        const checkoutUrl=payment.data?.checkout_url??payment.data?.url;
+        const checkoutUrl=verifiedStripeCheckoutUrl(payment.data?.checkout_url??payment.data?.url);
         if(payment.error){setMsg(`Checkout could not start: ${payment.error.message}. Your booking was already saved; retry payment without creating another booking.`);return}
         if(checkoutUrl){window.location.assign(checkoutUrl);return}
-        setMsg('Your booking is saved, but secure checkout is unavailable. Please try again later.');
+        setMsg('Your booking is saved, but checkout returned no valid secure Stripe link. Please try again later.');
       }catch{setMsg('Checkout could not start. Your booking is saved; please try again.')}finally{setBusy(false)}
       return;
     }
@@ -44,9 +45,9 @@ export default function BookingForm({service,user,back,account,viewBookings}:Pro
     try{
       const payment=await createPayment(bookingId);
       if(payment.error){setMsg(`Booking saved, but checkout could not start: ${payment.error.message}. Retry payment without creating another booking.`);return}
-      const checkoutUrl=payment.data?.checkout_url??payment.data?.url;
+      const checkoutUrl=verifiedStripeCheckoutUrl(payment.data?.checkout_url??payment.data?.url);
       if(checkoutUrl){window.location.assign(checkoutUrl);return}
-      setMsg('Booking saved. Secure checkout is not available yet, and no charge was made. You can retry payment.');
+      setMsg('Booking saved, but checkout returned no valid secure Stripe link. No charge was made through this page. You can retry payment.');
     }catch{setMsg('Booking saved, but checkout could not start. You can retry payment without creating another booking.')}finally{setBusy(false)}
     }catch{
       setMsg('We could not finish preparing your booking. Check My bookings before trying again.');
