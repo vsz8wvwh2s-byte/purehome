@@ -17,6 +17,7 @@ export default function SupportFAQ() {
   const filtered = questions.filter(item =>
     (item.question + ' ' + item.answer).toLowerCase().includes(query.trim().toLowerCase())
   );
+  const allVisibleExpanded = filtered.length > 0 && filtered.every(item => expanded.includes(item.question));
 
   return (
     <section className="section" aria-labelledby="support-heading">
@@ -28,8 +29,9 @@ export default function SupportFAQ() {
         onChange={event => setQuery(event.target.value)}
         placeholder="Search bookings, payments, cancellations..."
         style={{ display: 'block', width: '100%', maxWidth: 480, padding: 12, margin: '12px 0 24px' }} />
-      <button type="button" className="switch" onClick={() => setExpanded(previous => questions.every(item => previous.includes(item.question)) ? [] : questions.map(item => item.question))}>{questions.every(item => expanded.includes(item.question)) ? "Collapse all answers" : "Expand all answers"}</button>
-      <div aria-live="polite">
+      <button type="button" className="switch" onClick={() => setExpanded(previous => allVisibleExpanded ? previous.filter(question => !filtered.some(item => item.question === question)) : Array.from(new Set([...previous, ...filtered.map(item => item.question)])))}>{allVisibleExpanded ? "Collapse matching answers" : "Expand matching answers"}</button>
+      <p role="status">{filtered.length} help {filtered.length === 1 ? "topic" : "topics"} found</p>
+      <div>
         {filtered.length === 0 ? <p>No matching topics. Try a different search.</p> :
           filtered.map(item => (
             <details key={item.question} open={expanded.includes(item.question)} onToggle={event => { const isOpen = event.currentTarget.open; setExpanded(previous => isOpen ? (previous.includes(item.question) ? previous : [...previous, item.question]) : previous.filter(question => question !== item.question)); }} style={{ padding: '16px 0', borderBottom: '1px solid #d9e5e1' }}>
