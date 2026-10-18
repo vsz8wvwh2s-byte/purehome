@@ -36,7 +36,7 @@ test('expand control is disabled when no search results match', () => {
 
 test('FAQ search handles multiple words, case and whitespace', () => {
   assert.equal(filterHelpTopics(helpTopics, '  HOW   PAY ').length, 1);
-  assert.equal(filterHelpTopics(helpTopics, 'review cleaner').length, 1);
+  assert.equal(filterHelpTopics(helpTopics, 'review cleaning').length, 1);
   assert.equal(filterHelpTopics(helpTopics, 'no-such-topic').length, 0);
   assert.equal(filterHelpTopics(helpTopics, '').length, helpTopics.length);
 });
