@@ -10,7 +10,9 @@ test('help center is imported and accessible in the app navigation', () => {
   assert.match(app, /import SupportFAQ from ['"]\.\/components\/SupportFAQ['"]/);
   assert.match(app, /'support'/);
   assert.match(app, /setView\('support'\)/);
-  assert.match(app, /view==='support'\?<SupportFAQ\/>/);
+  assert.match(app, /view==='support'\?<SupportFAQ /);
+  assert.match(app, /onBrowseServices=\{\(\)=>setView\('home'\)\}/);
+  assert.match(app, /onMyBookings=\{\(\)=>setView\(user\?'bookings':'auth'\)\}/);
 });
 
 test('help center provides accessible search and results feedback', () => {
@@ -64,4 +66,11 @@ test('additional customer help topics are searchable', () => {
   assert.equal(filterHelpTopics(helpTopics, 'cleaning address').length > 0, true);
   assert.equal(filterHelpTopics(helpTopics, 'notifications').length > 0, true);
   assert.equal(filterHelpTopics(helpTopics, 'cleaner delayed').length, 1);
+});
+
+test('help center exposes working booking navigation callbacks', () => {
+  assert.match(faq, /onBrowseServices: \(\) => void/);
+  assert.match(faq, /onMyBookings: \(\) => void/);
+  assert.match(faq, /onClick=\{onBrowseServices\}/);
+  assert.match(faq, /onClick=\{onMyBookings\}/);
 });
