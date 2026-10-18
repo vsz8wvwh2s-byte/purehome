@@ -54,3 +54,10 @@ test('booking tips toggle is accessible and explains preparation', () => {
   assert.match(faq, /id="support-tips"/);
   assert.match(faq, /preferred date, cleaning address, and service choice/);
 });
+
+test('additional customer help topics are searchable', () => {
+  assert.equal(filterHelpTopics(helpTopics, 'appointment time').length > 0, true);
+  assert.equal(filterHelpTopics(helpTopics, 'valuables pets').length, 1);
+  assert.equal(filterHelpTopics(helpTopics, 'sign in').length > 0, true);
+  assert.equal(helpTopics.length, 9);
+});
