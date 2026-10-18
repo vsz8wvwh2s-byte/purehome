@@ -16,11 +16,13 @@ export default function BookingForm({service,user,back,account,success}:Props){
     if(coverageLoading){setMsg('Please wait while we verify service coverage.');return}
     const validation=validateBooking({date,time,addressId,line1,city,state,zip});
     if(validation){setMsg(validation);return}
+    const start=new Date(`${date}T${time}:00`);
+    if(start.getTime()<Date.now()+leadHours*3600000){setMsg(`Please choose a time at least ${leadHours} hours from now.`);return}
     setBusy(true);setMsg('');let aid=addressId;
     if(aid&&savedCoverage[aid]!==true){setMsg('This saved address is outside PureHome’s current service area. Choose another address or add a new one.');setBusy(false);return}
     if(!aid){const coverage=await checkServiceZip(zip.trim());if(coverage.error){setMsg('We could not check service availability right now. Please try again.');setBusy(false);return}if(!coverage.data?.available){setMsg('This address is outside PureHome’s current 100-mile service area around 28025.');setBusy(false);return}}
     if(!aid){const r=await addAddress({address_line_1:line1.trim(),city:city.trim(),state:state.trim().toUpperCase(),postal_code:zip.trim()});if(r.error){setMsg(r.error.message);setBusy(false);return}aid=r.data.id}
-    const start=new Date(`${date}T${time}:00`);if(start.getTime()<Date.now()+leadHours*3600000){setMsg(`Please choose a time at least ${leadHours} hours from now.`);setBusy(false);return}const end=new Date(start.getTime()+service.estimated_minutes*60000);
+    const end=new Date(start.getTime()+service.estimated_minutes*60000);
     const r=await createBooking({address_id:aid,scheduled_start:start.toISOString(),scheduled_end:end.toISOString(),items:[{service_id:service.id,quantity:1}],customer_notes:notes.trim()||undefined});
     if(r.error){setBusy(false);setMsg(r.error.message);return}
     const bookingId=r.data.booking_id;
