@@ -60,5 +60,8 @@ test('additional customer help topics are searchable', () => {
   assert.equal(filterHelpTopics(helpTopics, 'appointment time').length > 0, true);
   assert.equal(filterHelpTopics(helpTopics, 'valuables pets').length, 1);
   assert.equal(filterHelpTopics(helpTopics, 'sign in').length > 0, true);
-  assert.equal(helpTopics.length, 9);
+  assert.equal(helpTopics.length, 12);
+  assert.equal(filterHelpTopics(helpTopics, 'cleaning address').length > 0, true);
+  assert.equal(filterHelpTopics(helpTopics, 'notifications').length > 0, true);
+  assert.equal(filterHelpTopics(helpTopics, 'cleaner delayed').length, 1);
 });
