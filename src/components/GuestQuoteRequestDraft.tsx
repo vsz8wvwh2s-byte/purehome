@@ -20,6 +20,17 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     preferredDate: '', description: '',
   });
   const [photos, setPhotos] = useState<File[]>([]);
+  const [photoError, setPhotoError] = useState('');
+  function selectPhotos(files: FileList | null) {
+    const selected = Array.from(files ?? []);
+    if (selected.length > 5 || selected.some(file => !file.type.startsWith('image/') || file.size > 5 * 1024 * 1024)) {
+      setPhotoError('Choose up to five images, each no larger than 5 MB.');
+      setPhotos([]);
+      return;
+    }
+    setPhotoError('');
+    setPhotos(selected);
+  }
   const update = (key: keyof QuoteRequestDraft, value: string) =>
     setForm(previous => ({ ...previous, [key]: value }));
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -37,7 +48,9 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       <label>Cleaning address<input required autoComplete="street-address" value={form.address} onChange={e => update('address', e.target.value)} /></label>
       <label>Preferred date<input type="date" value={form.preferredDate} onChange={e => update('preferredDate', e.target.value)} /></label>
       <label>What needs cleaning?<textarea required maxLength={3000} value={form.description} onChange={e => update('description', e.target.value)} /></label>
-      <label>Photos (optional)<input type="file" accept="image/*" multiple onChange={e => setPhotos(Array.from(e.target.files ?? []))} /></label>
+      <label>Photos (optional)<input type="file" accept="image/*" multiple onChange={e => selectPhotos(e.target.files)} /></label>
+      {photoError && <p role="alert">{photoError}</p>}
+      {photos.length > 0 && <p>{photos.length} photo(s) selected. They have not been uploaded.</p>}
       <p role="status">Quote requests are not accepting submissions yet. Your information has not been sent.</p>
       <button type="submit" className="primary" disabled>Quote requests coming soon</button>
     </form>
