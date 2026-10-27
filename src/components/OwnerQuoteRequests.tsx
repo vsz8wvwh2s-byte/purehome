@@ -1,0 +1,9 @@
+import {useEffect,useState} from 'react';
+import {supabase} from '../supabase';
+type RequestRow={id:string;customer_name:string;customer_email:string;customer_phone:string;address:string;description:string;preferred_date:string|null;status:string;quoted_amount:number|null;created_at:string};
+export default function OwnerQuoteRequests(){
+ const [rows,setRows]=useState<RequestRow[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
+ async function refresh(){setLoading(true);const {data,error}=await supabase.from('quote_requests').select('id,customer_name,customer_email,customer_phone,address,description,preferred_date,status,quoted_amount,created_at').order('created_at',{ascending:false}).limit(100);setLoading(false);if(error)setError('Could not load quote requests. Check your administrator access.');else {setError('');setRows(data??[])}}
+ useEffect(()=>{void refresh()},[]);
+ return <section className="section"><h2>Customer quote requests</h2><p>Private owner view. Review each request before offering a custom price.</p><button type="button" onClick={()=>void refresh()}>Refresh requests</button>{loading?<p>Loading requests…</p>:error?<p role="alert">{error}</p>:rows.length===0?<p>No quote requests received yet.</p>:rows.map(r=><article key={r.id} className="card"><h3>{r.customer_name}</h3><p>{r.status} · {new Date(r.created_at).toLocaleString()}</p><p>{r.customer_email} · {r.customer_phone}</p><p>{r.address}</p><p>Preferred date: {r.preferred_date??'Not specified'}</p><p>{r.description}</p><p>Quote: {r.quoted_amount==null?'Not issued':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(r.quoted_amount)}</p></article>)}</section>
+}
