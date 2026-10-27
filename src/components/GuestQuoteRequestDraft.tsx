@@ -35,7 +35,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     setForm(previous => ({ ...previous, [key]: value }));
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // Intentionally no submission: customer details must not be silently lost.
+    // Submission stays disabled until the server endpoint has bot checks and verified persistence.
   }
   return <section className="booking">
     <button type="button" className="back" onClick={onBack}>← Back</button>
