@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type Props = { siteKey: string; onToken: (token: string) => void };
 type TurnstileApi = { render: (element: HTMLElement, options: Record<string, unknown>) => string; remove: (id: string) => void };
@@ -7,20 +7,28 @@ declare global { interface Window { turnstile?: TurnstileApi } }
 export default function TurnstileChallenge({ siteKey, onToken }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const onTokenRef = useRef(onToken);
+  const [loadError, setLoadError] = useState(false);
   onTokenRef.current = onToken;
+
   useEffect(() => {
     if (!siteKey) return;
     let active = true;
     let widgetId: string | undefined;
-    let disposed = false;
+    let poll: number | undefined;
     const mount = () => {
-      if (!active || disposed || !container.current || !window.turnstile || widgetId) return;
-      widgetId = window.turnstile.render(container.current, {
-        sitekey: siteKey,
-        callback: (token: string) => onTokenRef.current(token),
-        'expired-callback': () => onTokenRef.current(''),
-        'error-callback': () => onTokenRef.current(''),
-      });
+      if (!active || !container.current || !window.turnstile || widgetId !== undefined) return;
+      try {
+        widgetId = window.turnstile.render(container.current, {
+          sitekey: siteKey,
+          callback: (token: string) => { if (active) onTokenRef.current(token); },
+          'expired-callback': () => { if (active) onTokenRef.current(''); },
+          'error-callback': () => { if (active) { onTokenRef.current(''); setLoadError(true); } },
+        });
+        setLoadError(false);
+        if (poll !== undefined) window.clearInterval(poll);
+      } catch {
+        setLoadError(true);
+      }
     };
     const scriptId = 'purehome-turnstile-script';
     let script = document.getElementById(scriptId) as HTMLScriptElement | null;
@@ -32,18 +40,30 @@ export default function TurnstileChallenge({ siteKey, onToken }: Props) {
       script.defer = true;
       document.head.appendChild(script);
     }
+    const scriptFailed = () => { if (active) setLoadError(true); };
     script.addEventListener('load', mount);
-    // Another mounted challenge may have already loaded the shared script.
+    script.addEventListener('error', scriptFailed);
     mount();
-    const checkReady = window.setInterval(mount, 250);
+    // The shared script can finish loading before a new component attaches.
+    if (widgetId === undefined) poll = window.setInterval(mount, 250);
+    const deadline = window.setTimeout(() => {
+      if (active && widgetId === undefined) {
+        setLoadError(true);
+        if (poll !== undefined) window.clearInterval(poll);
+      }
+    }, 10000);
     return () => {
       active = false;
-      disposed = true;
-      window.clearInterval(checkReady);
+      if (poll !== undefined) window.clearInterval(poll);
+      window.clearTimeout(deadline);
       script?.removeEventListener('load', mount);
-      if (widgetId && window.turnstile) window.turnstile.remove(widgetId);
-      onTokenRef.current('');
+      script?.removeEventListener('error', scriptFailed);
+      if (widgetId !== undefined && window.turnstile) window.turnstile.remove(widgetId);
     };
   }, [siteKey]);
-  return <div ref={container} aria-label="Security verification" />;
+
+  return <div>
+    <div ref={container} aria-label="Security verification" />
+    {loadError && <p role="alert">Security verification is unavailable. Please refresh the page and try again later.</p>}
+  </div>;
 }
