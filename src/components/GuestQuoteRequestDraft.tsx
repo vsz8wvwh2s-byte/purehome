@@ -26,6 +26,20 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   function selectPhotos(files: FileList | null) {
     const selected = Array.from(files ?? []);
+    const totalBytes = selected.reduce((sum, file) => sum + file.size, 0);
+    const signatures = selected.map(file => `${file.name}:${file.size}:${file.lastModified}`);
+    if (new Set(signatures).size !== signatures.length) {
+      setPhotoError('The same photo was selected more than once. Please choose unique photos.');
+      setPhotos([]);
+      setPhotoInputKey(previous => previous + 1);
+      return;
+    }
+    if (totalBytes > 15 * 1024 * 1024) {
+      setPhotoError('Your photos are too large together. Please keep the total under 15 MB.');
+      setPhotos([]);
+      setPhotoInputKey(previous => previous + 1);
+      return;
+    }
     if (selected.length > 5 || selected.some(file => !['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
       setPhotoError('Choose up to five JPG, PNG, WebP, or HEIC photos, each no larger than 5 MB.');
       setPhotos([]);
@@ -56,7 +70,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       <p aria-live="polite">{form.description.length} / 3000 characters</p>
       <label>Photos (optional)<input type="file" key={photoInputKey} accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => selectPhotos(e.target.files)} /></label>
       {photoError && <p role="alert">{photoError}</p>}
-      {photos.length > 0 && <div><p>{photos.length} photo(s) selected. They have not been uploaded.</p><ul>{photos.map((file, index) => <li key={`${file.name}-${index}`}>{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB) <button type="button" onClick={() => { setPhotos(previous => previous.filter((_, i) => i !== index)); setPhotoInputKey(previous => previous + 1); }}>Remove</button></li>)}</ul><button type="button" onClick={() => {setPhotos([]);setPhotoInputKey(previous => previous + 1);}}>Remove all photos</button></div>}
+      {photos.length > 0 && <div><p>{photos.length} photo(s) selected ({(photos.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024).toFixed(1)} MB total). They have not been uploaded.</p><ul>{photos.map((file, index) => <li key={`${file.name}-${index}`}>{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB) <button type="button" onClick={() => { setPhotos(previous => previous.filter((_, i) => i !== index)); setPhotoInputKey(previous => previous + 1); }}>Remove</button></li>)}</ul><button type="button" onClick={() => {setPhotos([]);setPhotoInputKey(previous => previous + 1);}}>Remove all photos</button></div>}
       <button type="button" onClick={() => setShowReview(previous => !previous)} aria-expanded={showReview}>{showReview ? 'Hide request preview' : 'Preview my request'}</button>
       {showReview && <section aria-label="Request preview"><h2>Review your details</h2><p>Service: {service}</p><p>Name: {form.name || 'Not entered'}</p><p>Email: {form.email || 'Not entered'}</p><p>Phone: {form.phone || 'Not entered'}</p><p>Address: {form.address || 'Not entered'}</p><p>Preferred date: {form.preferredDate || 'Flexible'}</p><p>Cleaning details: {form.description || 'Not entered'}</p><p>Photos selected: {photos.length}</p><p>This is only a local preview. Nothing has been submitted.</p></section>}
       <p role="status">Quote requests are not accepting submissions yet. Your information has not been sent.</p>
