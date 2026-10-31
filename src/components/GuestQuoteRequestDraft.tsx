@@ -13,8 +13,8 @@ export type QuoteRequestDraft = {
 
 type Props = { service: QuoteRequestDraft['service']; onBack: () => void };
 
-// Draft only. Do not connect to a live booking flow until secure guest
-// submission, owner review, photo storage and notifications are implemented.
+// Guest submissions are feature-gated until server deployment and verification.
+// Photos and payments are not submitted by this component.
 export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const [form, setForm] = useState<QuoteRequestDraft>({
     service, name: '', email: '', phone: '', address: '',
@@ -25,6 +25,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const [showReview, setShowReview] = useState(false);
   const [token, setToken] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState('');
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? '';
   const submissionsEnabled = import.meta.env.VITE_ENABLE_GUEST_QUOTES === 'true' && Boolean(siteKey);
@@ -59,7 +60,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     setForm(previous => ({ ...previous, [key]: value }));
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!submissionsEnabled || !token || submitting || photos.length || photoError) return;
+    if (!submissionsEnabled || !token || submitting || submitted || photos.length || photoError) return;
     setSubmitting(true);
     setSubmissionMessage('');
     try {
@@ -68,6 +69,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
         body: JSON.stringify({ ...form, service, turnstileToken: token, website: '' }),
       });
       if (!response.ok) throw new Error('Unable to send your request. Please try again later.');
+      setSubmitted(true);
       setSubmissionMessage('Your quote request was received. The PureHome owner will review it before any payment or booking.');
     } catch {
       setSubmissionMessage('Unable to send your request. Please try again later.');
@@ -78,11 +80,12 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     <h1>Request a {service} quote</h1>
     <p>Tell us about your home. The PureHome owner will personally review your request and send a custom quote before any payment.</p>
     <p role="note">{submissionsEnabled ? 'Submit your request for a personal quote. Photo uploads are not available yet.' : 'This is a preview form. Submissions and photo uploads are not yet enabled.'}</p>
-    <form onSubmit={submit}>
+    {submitted ? <section role="status" aria-label="Quote request received"><h2>Request received</h2><p>{submissionMessage}</p><p>We will review the details and contact you using the email or phone you provided. Your preferred date is not a confirmed appointment.</p><button type="button" onClick={onBack}>Return to services</button></section> : <form onSubmit={submit}>
       <label>Full name<input required maxLength={120} autoComplete="name" value={form.name} onChange={e => update('name', e.target.value)} /></label>
       <label>Email<input required maxLength={254} type="email" autoComplete="email" value={form.email} onChange={e => update('email', e.target.value)} /></label>
       <label>Phone<input required minLength={7} maxLength={30} type="tel" autoComplete="tel" value={form.phone} onChange={e => update('phone', e.target.value)} /></label>
       <label>Cleaning address<input required maxLength={300} autoComplete="street-address" value={form.address} onChange={e => update('address', e.target.value)} /></label>
+      <p>A preferred date is a request only. Your appointment is not reserved until your quote is accepted and payment is complete.</p>
       <label>Preferred date<input type="date" min={today} value={form.preferredDate} onChange={e => update('preferredDate', e.target.value)} /></label>
       <label>What needs cleaning?<textarea required minLength={10} maxLength={3000} value={form.description} onChange={e => update('description', e.target.value)} placeholder="Tell us the number of rooms, approximate home size, pets, and areas needing extra attention." /></label>
       <p aria-live="polite">{form.description.length} / 3000 characters</p>
@@ -94,6 +97,6 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       {submissionsEnabled && <TurnstileChallenge siteKey={siteKey} onToken={setToken} />}
       <p role="status">{submissionMessage || (submissionsEnabled ? photos.length ? 'Remove selected photos to submit without photos for now.' : 'Complete security verification to submit.' : 'Quote requests are not accepting submissions yet. Your information has not been sent.')}</p>
       <button type="submit" className="primary" disabled={!submissionsEnabled || !token || submitting || photos.length > 0 || Boolean(photoError)}>{submitting ? 'Sending request…' : submissionsEnabled ? 'Send quote request' : 'Quote requests coming soon'}</button>
-    </form>
+    </form>}
   </section>;
 }
