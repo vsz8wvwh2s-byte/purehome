@@ -23,9 +23,9 @@ export default function OwnerQuoteRequests(){
   if(nextStatus==='quoted'&&!window.confirm('Only mark this quote as sent after you have actually emailed the customer. Continue?'))return;
   setSavingId(request.id);
   setSaveMessages(previous=>({...previous,[request.id]:''}));
-  const result=await supabase.from('quote_requests').update({status:nextStatus}).eq('id',request.id).select('id,status').single();
+  const result=await supabase.from('quote_requests').update({status:nextStatus}).eq('id',request.id).eq('status',request.status).select('id,status').single();
   setSavingId(null);
-  if(result.error||!result.data){setSaveMessages(previous=>({...previous,[request.id]:'Could not update the request status. Check your owner access.'}));return;}
+  if(result.error||!result.data){setSaveMessages(previous=>({...previous,[request.id]:'Could not update the request. It may have changed since you loaded it. Refresh requests before trying again.'}));return;}
   setRows(previous=>previous.map(row=>row.id===request.id?{...row,status:result.data.status}:row));
   setSaveMessages(previous=>({...previous,[request.id]:nextStatus==='quoted'?'Marked as quoted. This records your manual confirmation; no email was sent by PureHome.':'Request status updated.'}));
  }
@@ -40,9 +40,9 @@ export default function OwnerQuoteRequests(){
   }
   setSavingId(request.id);
   setSaveMessages(previous=>({...previous,[request.id]:''}));
-  const result=await supabase.from('quote_requests').update({quoted_amount:amount}).eq('id',request.id).select('id,quoted_amount').single();
+  const result=await supabase.from('quote_requests').update({quoted_amount:amount}).eq('id',request.id).eq('status',request.status).select('id,quoted_amount').single();
   setSavingId(null);
-  if(result.error||!result.data){setSaveMessages(previous=>({...previous,[request.id]:'Could not save the price. Check your owner access and try again.'}));return;}
+  if(result.error||!result.data){setSaveMessages(previous=>({...previous,[request.id]:'Could not save the price. This request may have changed. Refresh requests before trying again.'}));return;}
   setRows(previous=>previous.map(row=>row.id===request.id?{...row,quoted_amount:Number(result.data.quoted_amount)}:row));
   setSaveMessages(previous=>({...previous,[request.id]:'Price saved privately. It has not been sent to the customer, and no payment or appointment was created.'}));
  }
