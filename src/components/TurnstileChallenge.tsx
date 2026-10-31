@@ -12,8 +12,9 @@ export default function TurnstileChallenge({ siteKey, onToken }: Props) {
     if (!siteKey) return;
     let active = true;
     let widgetId: string | undefined;
+    let disposed = false;
     const mount = () => {
-      if (!active || !container.current || !window.turnstile || widgetId) return;
+      if (!active || disposed || !container.current || !window.turnstile || widgetId) return;
       widgetId = window.turnstile.render(container.current, {
         sitekey: siteKey,
         callback: (token: string) => onTokenRef.current(token),
@@ -32,9 +33,13 @@ export default function TurnstileChallenge({ siteKey, onToken }: Props) {
       document.head.appendChild(script);
     }
     script.addEventListener('load', mount);
+    // Another mounted challenge may have already loaded the shared script.
     mount();
+    const checkReady = window.setInterval(mount, 250);
     return () => {
       active = false;
+      disposed = true;
+      window.clearInterval(checkReady);
       script?.removeEventListener('load', mount);
       if (widgetId && window.turnstile) window.turnstile.remove(widgetId);
       onTokenRef.current('');
