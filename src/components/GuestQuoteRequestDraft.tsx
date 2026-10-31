@@ -27,6 +27,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const [challengeAttempt, setChallengeAttempt] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [deliveryUncertain, setDeliveryUncertain] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState('');
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? '';
   const submissionsEnabled = import.meta.env.VITE_ENABLE_GUEST_QUOTES === 'true' && Boolean(siteKey);
@@ -64,16 +65,25 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     if (!submissionsEnabled || !token || submitting || submitted || photos.length || photoError) return;
     setSubmitting(true);
     setSubmissionMessage('');
+    setDeliveryUncertain(false);
     try {
       const response = await fetch('https://iphxpqycoaqwjhecfajp.supabase.co/functions/v1/submit-guest-quote', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, service, turnstileToken: token, website: '' }),
       });
-      if (!response.ok) throw new Error('Unable to send your request. Please try again later.');
+      if (!response.ok) {
+        if (response.status === 403 || response.status === 400) throw new Error('Verification or request details were rejected. Please check your information and try again.');
+        throw new Error('The service is temporarily unavailable. Please try again later.');
+      }
       setSubmitted(true);
       setSubmissionMessage('Your quote request was received. The PureHome owner will review it before any payment or booking.');
-    } catch {
-      setSubmissionMessage('Unable to send your request. Please try again later.');
+    } catch (error) {
+      if (error instanceof TypeError) {
+        setDeliveryUncertain(true);
+        setSubmissionMessage('We could not confirm whether your request was received. Please contact PureHome before submitting again to avoid duplicates.');
+      } else {
+        setSubmissionMessage(error instanceof Error ? error.message : 'Unable to send your request. Please try again later.');
+      }
     } finally {
       setSubmitting(false);
       setToken('');
@@ -101,8 +111,9 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       <button type="button" onClick={() => setShowReview(previous => !previous)} aria-expanded={showReview}>{showReview ? 'Hide request preview' : 'Preview my request'}</button>
       {showReview && <section aria-label="Request preview"><h2>Review your details</h2><p>Service: {service}</p><p>Name: {form.name || 'Not entered'}</p><p>Email: {form.email || 'Not entered'}</p><p>Phone: {form.phone || 'Not entered'}</p><p>Address: {form.address || 'Not entered'}</p><p>Preferred date: {form.preferredDate || 'Flexible'}</p><p>Cleaning details: {form.description || 'Not entered'}</p><p>Photos selected: {photos.length}</p><p>This is only a local preview. Nothing has been submitted.</p></section>}
       {submissionsEnabled && <TurnstileChallenge key={challengeAttempt} siteKey={siteKey} onToken={setToken} />}
+      {deliveryUncertain && <p role="alert">The connection was interrupted. Your request may have arrived; please check with PureHome before trying again.</p>}
       <p role="status">{submissionMessage || (submissionsEnabled ? photos.length ? 'Remove selected photos to submit without photos for now.' : 'Complete security verification to submit.' : 'Quote requests are not accepting submissions yet. Your information has not been sent.')}</p>
-      <button type="submit" className="primary" disabled={!submissionsEnabled || !token || submitting || submitted || photos.length > 0 || Boolean(photoError)}>{submitting ? 'Sending request…' : submissionsEnabled ? 'Send quote request' : 'Quote requests coming soon'}</button>
+      <button type="submit" className="primary" disabled={!submissionsEnabled || !token || submitting || submitted || deliveryUncertain || photos.length > 0 || Boolean(photoError)}>{submitting ? 'Sending request…' : submissionsEnabled ? 'Send quote request' : 'Quote requests coming soon'}</button>
     </form>}
   </section>;
 }
