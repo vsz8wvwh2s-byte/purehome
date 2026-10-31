@@ -67,10 +67,16 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     setSubmissionMessage('');
     setDeliveryUncertain(false);
     try {
-      const response = await fetch('https://iphxpqycoaqwjhecfajp.supabase.co/functions/v1/submit-guest-quote', {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 20000);
+      let response: Response;
+      try {
+        response = await fetch('https://iphxpqycoaqwjhecfajp.supabase.co/functions/v1/submit-guest-quote', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, service, turnstileToken: token, website: '' }),
+        signal: controller.signal,
       });
+      } finally { window.clearTimeout(timeout); }
       if (!response.ok) {
         if (response.status === 403 || response.status === 400) throw new Error('Verification or request details were rejected. Please check your information and try again.');
         throw new Error('The service is temporarily unavailable. Please try again later.');
@@ -78,7 +84,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       setSubmitted(true);
       setSubmissionMessage('Your quote request was received. The PureHome owner will review it before any payment or booking.');
     } catch (error) {
-      if (error instanceof TypeError) {
+      if (error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError')) {
         setDeliveryUncertain(true);
         setSubmissionMessage('We could not confirm whether your request was received. Please contact PureHome before submitting again to avoid duplicates.');
       } else {
@@ -112,6 +118,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       {showReview && <section aria-label="Request preview"><h2>Review your details</h2><p>Service: {service}</p><p>Name: {form.name || 'Not entered'}</p><p>Email: {form.email || 'Not entered'}</p><p>Phone: {form.phone || 'Not entered'}</p><p>Address: {form.address || 'Not entered'}</p><p>Preferred date: {form.preferredDate || 'Flexible'}</p><p>Cleaning details: {form.description || 'Not entered'}</p><p>Photos selected: {photos.length}</p><p>This is only a local preview. Nothing has been submitted.</p></section>}
       {submissionsEnabled && <TurnstileChallenge key={challengeAttempt} siteKey={siteKey} onToken={setToken} />}
       {deliveryUncertain && <p role="alert">The connection was interrupted. Your request may have arrived; please check with PureHome before trying again.</p>}
+      {submitting && <p role="status">Sending securely… Please keep this page open.</p>}
       <p role="status">{submissionMessage || (submissionsEnabled ? photos.length ? 'Remove selected photos to submit without photos for now.' : 'Complete security verification to submit.' : 'Quote requests are not accepting submissions yet. Your information has not been sent.')}</p>
       <button type="submit" className="primary" disabled={!submissionsEnabled || !token || submitting || submitted || deliveryUncertain || photos.length > 0 || Boolean(photoError)}>{submitting ? 'Sending request…' : submissionsEnabled ? 'Send quote request' : 'Quote requests coming soon'}</button>
     </form>}
