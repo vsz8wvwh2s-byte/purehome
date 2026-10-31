@@ -75,7 +75,7 @@ Deno.serve(async request => {
   if (serviceError || !selected) return respond(503, { error: 'Service temporarily unavailable' }, origin);
   const { error } = await db.from('quote_requests').insert({
     service_id: selected.id, customer_name: name, customer_email: email, customer_phone: phone,
-    address, description, preferred_date: preferredDate || null, status: 'pending',
+    address, description, preferred_date: preferredDate || null, status: 'new',
   });
   if (error) { console.error('Guest quote insertion failed', error.code); return respond(503, { error: 'Unable to submit your request right now' }, origin); }
   return respond(201, { received: true, message: 'Your request has been received for review.' }, origin);
