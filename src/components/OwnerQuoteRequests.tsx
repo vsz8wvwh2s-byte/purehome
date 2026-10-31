@@ -20,6 +20,9 @@ export default function OwnerQuoteRequests(){
   if(nextStatus==='quoted'&&(request.quoted_amount==null||request.quoted_amount<=0)){
    setSaveMessages(previous=>({...previous,[request.id]:'Save a valid quote price before marking it as sent.'}));return;
   }
+  if(nextStatus==='quoted'&&draftAmounts[request.id]!==undefined&&Number(draftAmounts[request.id])!==request.quoted_amount){
+   setSaveMessages(previous=>({...previous,[request.id]:'Your draft price differs from the saved price. Save the new amount before marking the quote as sent.'}));return;
+  }
   if(nextStatus==='quoted'&&!window.confirm('Only mark this quote as sent after you have actually emailed the customer. Continue?'))return;
   setSavingId(request.id);
   setSaveMessages(previous=>({...previous,[request.id]:''}));
@@ -40,7 +43,10 @@ export default function OwnerQuoteRequests(){
   }
   setSavingId(request.id);
   setSaveMessages(previous=>({...previous,[request.id]:''}));
-  const result=await supabase.from('quote_requests').update({quoted_amount:amount}).eq('id',request.id).eq('status',request.status).select('id,quoted_amount').single();
+  let update=supabase.from('quote_requests').update({quoted_amount:amount}).eq('id',request.id).eq('status',request.status);
+  // Compare the last known price as well as status so another owner session cannot be overwritten.
+  update=request.quoted_amount==null?update.is('quoted_amount',null):update.eq('quoted_amount',request.quoted_amount);
+  const result=await update.select('id,quoted_amount').single();
   setSavingId(null);
   if(result.error||!result.data){setSaveMessages(previous=>({...previous,[request.id]:'Could not save the price. This request may have changed. Refresh requests before trying again.'}));return;}
   setRows(previous=>previous.map(row=>row.id===request.id?{...row,quoted_amount:Number(result.data.quoted_amount)}:row));
