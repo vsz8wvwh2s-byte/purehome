@@ -18,6 +18,7 @@ Deno.serve(async request => {
   if (!allowedOrigins.includes(origin)) return respond(403, { error: 'Origin not allowed' }, origin);
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: { ...headers, 'Access-Control-Allow-Origin': origin } });
   if (request.method !== 'POST') return respond(405, { error: 'Method not allowed' }, origin);
+  if (!(request.headers.get('content-type') ?? '').toLowerCase().startsWith('application/json')) return respond(415, { error: 'JSON request required' }, origin);
   if (Number(request.headers.get('content-length') ?? 0) > 16000) return respond(413, { error: 'Request too large' }, origin);
   const secret = Deno.env.get('TURNSTILE_SECRET_KEY');
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -50,11 +51,17 @@ Deno.serve(async request => {
   const address = clean(payload.address, 300), description = clean(payload.description, 3000);
   const service = clean(payload.service, 50), preferredDate = clean(payload.preferredDate, 10);
   const token = clean(payload.turnstileToken, 4096);
+  // Date parsing alone normalizes invalid dates such as February 30.
+  const validDate = !preferredDate || (() => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate)) return false;
+    const [year, month, day] = preferredDate.split('-').map(Number);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    return parsed.getUTCFullYear() === year && parsed.getUTCMonth() + 1 === month && parsed.getUTCDate() === day;
+  })();
   if (!name || name.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
     phone.length < 7 || phone.length > 30 || !address || address.length > 300 ||
     description.length < 10 || description.length > 3000 || !['Standard Cleaning', 'Deep Cleaning'].includes(service) ||
-    (preferredDate && (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate) || !Number.isFinite(Date.parse(preferredDate)) ||
-      preferredDate < new Date().toISOString().slice(0, 10))) || !token)
+    (!validDate || (preferredDate && preferredDate < new Date().toISOString().slice(0, 10))) || !token)
     return respond(400, { error: 'Please check your details and verification' }, origin);
   const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
