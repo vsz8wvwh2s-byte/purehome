@@ -26,7 +26,10 @@ export default function OwnerQuoteRequests(){
   if(nextStatus==='quoted'&&!window.confirm('Only mark this quote as sent after you have actually emailed the customer. Continue?'))return;
   setSavingId(request.id);
   setSaveMessages(previous=>({...previous,[request.id]:''}));
-  const result=await supabase.from('quote_requests').update({status:nextStatus}).eq('id',request.id).eq('status',request.status).select('id,status').single();
+  let update=supabase.from('quote_requests').update({status:nextStatus}).eq('id',request.id).eq('status',request.status);
+  // A quote must not be marked sent if its saved price changed in another session.
+  if(nextStatus==='quoted')update=update.eq('quoted_amount',request.quoted_amount!);
+  const result=await update.select('id,status').single();
   setSavingId(null);
   if(result.error||!result.data){setSaveMessages(previous=>({...previous,[request.id]:'Could not update the request. It may have changed since you loaded it. Refresh requests before trying again.'}));return;}
   setRows(previous=>previous.map(row=>row.id===request.id?{...row,status:result.data.status}:row));
@@ -50,6 +53,7 @@ export default function OwnerQuoteRequests(){
   setSavingId(null);
   if(result.error||!result.data){setSaveMessages(previous=>({...previous,[request.id]:'Could not save the price. This request may have changed. Refresh requests before trying again.'}));return;}
   setRows(previous=>previous.map(row=>row.id===request.id?{...row,quoted_amount:Number(result.data.quoted_amount)}:row));
+  setDraftAmounts(previous=>({...previous,[request.id]:String(result.data.quoted_amount)}));
   setSaveMessages(previous=>({...previous,[request.id]:'Price saved privately. It has not been sent to the customer, and no payment or appointment was created.'}));
  }
 
