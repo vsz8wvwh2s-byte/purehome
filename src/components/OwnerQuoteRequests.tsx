@@ -5,9 +5,9 @@ export default function OwnerQuoteRequests(){
  const [draftAmounts,setDraftAmounts]=useState<Record<string,string>>({}),[rows,setRows]=useState<RequestRow[]>([]),[page,setPage]=useState(0),[hasMore,setHasMore]=useState(false),[error,setError]=useState(''),[loading,setLoading]=useState(true),[filter,setFilter]=useState('all'),[priceFilter,setPriceFilter]=useState('all'),[serviceFilter,setServiceFilter]=useState('all'),[search,setSearch]=useState(''),[sort,setSort]=useState<'newest'|'oldest'>('newest'),[expanded,setExpanded]=useState<string[]>([]);
  const visible=rows.filter(r=>(filter==='all'||r.status===filter)&&(priceFilter==='all'||(priceFilter==='unpriced'?r.quoted_amount==null:r.quoted_amount!=null))&&(serviceFilter==='all'||r.services?.name===serviceFilter)&&[r.customer_name,r.customer_email,r.address,r.description].some(value=>value.toLowerCase().includes(search.trim().toLowerCase()))).sort((a,b)=>sort==='newest'?Date.parse(b.created_at)-Date.parse(a.created_at):Date.parse(a.created_at)-Date.parse(b.created_at));
  const statuses=Array.from(new Set(rows.map(r=>r.status)));
- const statusLabel=(status:string)=>({new:'New',reviewing:'Under review',quoted:'Quoted',accepted:'Accepted',declined:'Declined',closed:'Closed'} as Record<string,string>)[status]??status;
+ const statusLabel=(status:string)=>({pending:'Pending review',new:'New',reviewing:'Under review',quoted:'Quoted',accepted:'Accepted',declined:'Declined',closed:'Closed'} as Record<string,string>)[status]??status;
  const serviceNames=Array.from(new Set(rows.map(r=>r.services?.name).filter((name):name is string=>Boolean(name))));
- const pendingCount=rows.filter(r=>r.status==='new'||r.status==='reviewing').length;
+ const pendingCount=rows.filter(r=>r.status==='pending'||r.status==='new'||r.status==='reviewing').length;
  const pricedCount=rows.filter(r=>r.quoted_amount!=null).length;
  const unpricedCount=rows.filter(r=>r.quoted_amount==null).length;
  const currency=(amount:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
