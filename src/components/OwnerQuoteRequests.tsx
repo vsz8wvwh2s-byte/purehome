@@ -17,6 +17,7 @@ export default function OwnerQuoteRequests(){
   if(request.status==='accepted'||request.status==='closed'||request.status==='declined'||(request.status==='quoted'&&nextStatus==='reviewing')){
    setSaveMessages(previous=>({...previous,[request.id]:'This request cannot be moved back to review. Contact the customer before making changes to an issued quote.'}));return;
   }
+  if(request.status==='quoted'&&nextStatus==='quoted')return;
   if(nextStatus==='quoted'&&(request.quoted_amount==null||request.quoted_amount<=0)){
    setSaveMessages(previous=>({...previous,[request.id]:'Save a valid quote price before marking it as sent.'}));return;
   }
@@ -24,6 +25,8 @@ export default function OwnerQuoteRequests(){
    setSaveMessages(previous=>({...previous,[request.id]:'Your draft price differs from the saved price. Save the new amount before marking the quote as sent.'}));return;
   }
   if(nextStatus==='quoted'&&!window.confirm('Only mark this quote as sent after you have actually emailed the customer. Continue?'))return;
+  if(nextStatus==='declined'&&!window.confirm('Mark this customer request as declined? This action locks the request in the dashboard.'))return;
+  if(nextStatus==='closed'&&!window.confirm('Close this customer request? This action locks the request in the dashboard.'))return;
   setSavingId(request.id);
   setSaveMessages(previous=>({...previous,[request.id]:''}));
   let update=supabase.from('quote_requests').update({status:nextStatus}).eq('id',request.id).eq('status',request.status);
