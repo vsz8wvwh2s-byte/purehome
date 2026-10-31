@@ -24,6 +24,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const [photoError, setPhotoError] = useState('');
   const [showReview, setShowReview] = useState(false);
   const [token, setToken] = useState('');
+  const [challengeAttempt, setChallengeAttempt] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState('');
@@ -73,7 +74,12 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       setSubmissionMessage('Your quote request was received. The PureHome owner will review it before any payment or booking.');
     } catch {
       setSubmissionMessage('Unable to send your request. Please try again later.');
-    } finally { setSubmitting(false); setToken(''); }
+    } finally {
+      setSubmitting(false);
+      setToken('');
+      // A Turnstile response is single-use. Render a fresh challenge after every attempt.
+      setChallengeAttempt(previous => previous + 1);
+    }
   }
   return <section className="booking">
     <button type="button" className="back" onClick={onBack}>← Back</button>
@@ -94,9 +100,9 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       {photos.length > 0 && <div><p>{photos.length} photo(s) selected ({(photos.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024).toFixed(1)} MB total). They have not been uploaded.</p><ul>{photos.map((file, index) => <li key={`${file.name}-${index}`}>{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB) <button type="button" onClick={() => { setPhotos(previous => previous.filter((_, i) => i !== index)); setPhotoInputKey(previous => previous + 1); }}>Remove</button></li>)}</ul><button type="button" onClick={() => {setPhotos([]);setPhotoInputKey(previous => previous + 1);}}>Remove all photos</button></div>}
       <button type="button" onClick={() => setShowReview(previous => !previous)} aria-expanded={showReview}>{showReview ? 'Hide request preview' : 'Preview my request'}</button>
       {showReview && <section aria-label="Request preview"><h2>Review your details</h2><p>Service: {service}</p><p>Name: {form.name || 'Not entered'}</p><p>Email: {form.email || 'Not entered'}</p><p>Phone: {form.phone || 'Not entered'}</p><p>Address: {form.address || 'Not entered'}</p><p>Preferred date: {form.preferredDate || 'Flexible'}</p><p>Cleaning details: {form.description || 'Not entered'}</p><p>Photos selected: {photos.length}</p><p>This is only a local preview. Nothing has been submitted.</p></section>}
-      {submissionsEnabled && <TurnstileChallenge siteKey={siteKey} onToken={setToken} />}
+      {submissionsEnabled && <TurnstileChallenge key={challengeAttempt} siteKey={siteKey} onToken={setToken} />}
       <p role="status">{submissionMessage || (submissionsEnabled ? photos.length ? 'Remove selected photos to submit without photos for now.' : 'Complete security verification to submit.' : 'Quote requests are not accepting submissions yet. Your information has not been sent.')}</p>
-      <button type="submit" className="primary" disabled={!submissionsEnabled || !token || submitting || photos.length > 0 || Boolean(photoError)}>{submitting ? 'Sending request…' : submissionsEnabled ? 'Send quote request' : 'Quote requests coming soon'}</button>
+      <button type="submit" className="primary" disabled={!submissionsEnabled || !token || submitting || submitted || photos.length > 0 || Boolean(photoError)}>{submitting ? 'Sending request…' : submissionsEnabled ? 'Send quote request' : 'Quote requests coming soon'}</button>
     </form>}
   </section>;
 }
