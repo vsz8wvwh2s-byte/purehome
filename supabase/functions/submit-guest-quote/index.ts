@@ -65,10 +65,10 @@ Deno.serve(async request => {
     return respond(400, { error: 'Please check your details and verification' }, origin);
   const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ secret, response: token }),
+    body: new URLSearchParams({ secret, response: token, ...(request.headers.get('cf-connecting-ip') ? { remoteip: request.headers.get('cf-connecting-ip')! } : {}) }),
   }).catch(() => null);
   const verdict = verify?.ok ? await verify.json().catch(() => null) : null;
-  if (!verdict?.success || typeof verdict.hostname !== 'string' || !allowedOrigins.some(o => new URL(o).hostname === verdict.hostname))
+  if (!verdict?.success || typeof verdict.hostname !== 'string' || new URL(origin).hostname !== verdict.hostname)
     return respond(403, { error: 'Verification failed. Please try again' }, origin);
   const db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: selected, error: serviceError } = await db.from('services').select('id').eq('name', service).eq('is_active', true).single();
