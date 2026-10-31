@@ -24,7 +24,25 @@ Deno.serve(async request => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   if (!secret || !serviceKey || !supabaseUrl) return respond(503, { error: 'Quote requests are temporarily unavailable' }, origin);
   let payload: Record<string, unknown>;
-  try { payload = await request.json(); if (!payload || Array.isArray(payload) || typeof payload !== 'object') throw Error(); }
+  try {
+    // Enforce the limit even when Content-Length is absent or inaccurate.
+    const reader = request.body?.getReader();
+    if (!reader) throw Error('Missing body');
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > 16000) { await reader.cancel(); return respond(413, { error: 'Request too large' }, origin); }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    payload = JSON.parse(new TextDecoder().decode(bytes));
+    if (!payload || Array.isArray(payload) || typeof payload !== 'object') throw Error('Invalid JSON');
+  }
   catch { return respond(400, { error: 'Invalid request' }, origin); }
   // Honeypot must remain empty. Do not expose whether bot detection triggered.
   if (payload.website) return respond(200, { received: true }, origin);
@@ -43,7 +61,7 @@ Deno.serve(async request => {
     body: new URLSearchParams({ secret, response: token }),
   }).catch(() => null);
   const verdict = verify?.ok ? await verify.json().catch(() => null) : null;
-  if (!verdict?.success || (verdict.hostname && !allowedOrigins.some(o => new URL(o).hostname === verdict.hostname)))
+  if (!verdict?.success || typeof verdict.hostname !== 'string' || !allowedOrigins.some(o => new URL(o).hostname === verdict.hostname))
     return respond(403, { error: 'Verification failed. Please try again' }, origin);
   const db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: selected, error: serviceError } = await db.from('services').select('id').eq('name', service).eq('is_active', true).single();
