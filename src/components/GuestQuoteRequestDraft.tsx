@@ -22,12 +22,14 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoError, setPhotoError] = useState('');
   const [showReview, setShowReview] = useState(false);
+  const [photoInputKey, setPhotoInputKey] = useState(0);
   const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   function selectPhotos(files: FileList | null) {
     const selected = Array.from(files ?? []);
     if (selected.length > 5 || selected.some(file => !['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
       setPhotoError('Choose up to five JPG, PNG, WebP, or HEIC photos, each no larger than 5 MB.');
       setPhotos([]);
+      setPhotoInputKey(previous => previous + 1);
       return;
     }
     setPhotoError('');
@@ -52,9 +54,9 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       <label>Preferred date<input type="date" min={today} value={form.preferredDate} onChange={e => update('preferredDate', e.target.value)} /></label>
       <label>What needs cleaning?<textarea required minLength={10} maxLength={3000} value={form.description} onChange={e => update('description', e.target.value)} placeholder="Tell us the number of rooms, approximate home size, pets, and areas needing extra attention." /></label>
       <p aria-live="polite">{form.description.length} / 3000 characters</p>
-      <label>Photos (optional)<input type="file" accept="image/*" multiple onChange={e => selectPhotos(e.target.files)} /></label>
+      <label>Photos (optional)<input type="file" key={photoInputKey} accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => selectPhotos(e.target.files)} /></label>
       {photoError && <p role="alert">{photoError}</p>}
-      {photos.length > 0 && <p>{photos.length} photo(s) selected. They have not been uploaded.</p>}
+      {photos.length > 0 && <div><p>{photos.length} photo(s) selected. They have not been uploaded.</p><ul>{photos.map((file, index) => <li key={`${file.name}-${index}`}>{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB) <button type="button" onClick={() => { setPhotos(previous => previous.filter((_, i) => i !== index)); setPhotoInputKey(previous => previous + 1); }}>Remove</button></li>)}</ul><button type="button" onClick={() => {setPhotos([]);setPhotoInputKey(previous => previous + 1);}}>Remove all photos</button></div>}
       <button type="button" onClick={() => setShowReview(previous => !previous)} aria-expanded={showReview}>{showReview ? 'Hide request preview' : 'Preview my request'}</button>
       {showReview && <section aria-label="Request preview"><h2>Review your details</h2><p>Service: {service}</p><p>Name: {form.name || 'Not entered'}</p><p>Email: {form.email || 'Not entered'}</p><p>Phone: {form.phone || 'Not entered'}</p><p>Address: {form.address || 'Not entered'}</p><p>Preferred date: {form.preferredDate || 'Flexible'}</p><p>Cleaning details: {form.description || 'Not entered'}</p><p>Photos selected: {photos.length}</p><p>This is only a local preview. Nothing has been submitted.</p></section>}
       <p role="status">Quote requests are not accepting submissions yet. Your information has not been sent.</p>
