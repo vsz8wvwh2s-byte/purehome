@@ -1,0 +1,4 @@
+# Public guest quote endpoint uses Turnstile and strict origin checks instead of a user JWT.
+# Keep other Edge Functions authenticated unless explicitly configured otherwise.
+[functions.submit-guest-quote]
+verify_jwt = false
