@@ -78,7 +78,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       try {
         response = await fetch('https://iphxpqycoaqwjhecfajp.supabase.co/functions/v1/submit-guest-quote', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, service, turnstileToken: token, website: '' }),
+        body: JSON.stringify({ ...form, service, contactConsent, turnstileToken: token, website: '' }),
         signal: controller.signal,
       });
       } finally { window.clearTimeout(timeout); }
