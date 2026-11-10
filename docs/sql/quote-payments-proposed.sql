@@ -26,6 +26,9 @@ create table if not exists purehome_private.quote_payment_plans (
 create table if not exists purehome_private.stripe_webhook_events (
   stripe_event_id text primary key,
   stripe_event_type text not null,
+  checkout_session_id text not null,
+  amount_cents bigint not null,
+  currency text not null check (currency = 'usd'),
   received_at timestamptz not null default now(),
   processed_at timestamptz,
   processing_error text
