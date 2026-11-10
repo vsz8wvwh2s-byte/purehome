@@ -7,9 +7,16 @@ test('guest quote requires explicit contact consent',()=>{
  assert.match(src,/type="checkbox" checked=\{contactConsent\}/);
  assert.match(src,/I agree that PureHome may contact me/);
  assert.match(src,/!contactConsent \|\| submitting/);
+ assert.match(src,/service, contactConsent, turnstileToken: token/);
 });
 test('guest quote rejects stale dates and blank descriptions before submission',()=>{
  assert.match(src,/form\.preferredDate < today/);
  assert.match(src,/form\.description\.trim\(\)\.length < 10/);
  assert.match(src,/form\.address\.trim\(\)/);
+});
+
+test('server requires affirmative consent before storing a quote request',()=>{
+ const backend=readFileSync(new URL('../supabase/functions/submit-guest-quote/index.ts',import.meta.url),'utf8');
+ assert.match(backend,/payload\.contactConsent === true/);
+ assert.match(backend,/!token \|\| !contactConsent/);
 });
