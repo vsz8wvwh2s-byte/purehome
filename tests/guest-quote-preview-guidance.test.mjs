@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const src=readFileSync(new URL('../src/components/GuestQuoteRequestDraft.tsx',import.meta.url),'utf8');
 test('request preview surfaces validation problems before submit',()=>{
- assert.match(src,/showReview && validateGuestQuoteDraft\(\{ \.\.\.form, service \}, today\)/);
+ assert.match(src,/const draftError = validateGuestQuoteDraft\(\{ \.\.\.form, service \}, today\)/);
+ assert.match(src,/showReview && draftError/);
  assert.match(src,/Before submitting:/);
  assert.match(src,/showReview && !contactConsent/);
 });
