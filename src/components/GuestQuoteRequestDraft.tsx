@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import TurnstileChallenge from './TurnstileChallenge';
 import {validateQuotePhotos} from '../quote-photo-validation.js';
 import {inspectQuotePhotoSignatures} from '../quote-photo-signature.js';
@@ -32,6 +32,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   }, [photos]);
   const [photoError, setPhotoError] = useState('');
   const [inspectingPhotos, setInspectingPhotos] = useState(false);
+  const photoSelectionVersion = useRef(0);
   const [showReview, setShowReview] = useState(false);
   const [contactConsent, setContactConsent] = useState(false);
   const [token, setToken] = useState('');
@@ -45,6 +46,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const [photoInputKey, setPhotoInputKey] = useState(0);
   const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   async function selectPhotos(files: FileList | null) {
+    const selectionVersion = ++photoSelectionVersion.current;
     const selected = Array.from(files ?? []);
     const validation = validateQuotePhotos(selected);
     if (!validation.ok) {
@@ -55,6 +57,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     }
     setInspectingPhotos(true);
     const signatures = await inspectQuotePhotoSignatures(selected);
+    if (selectionVersion !== photoSelectionVersion.current) return;
     setInspectingPhotos(false);
     if (!signatures.ok) {
       setPhotoError(signatures.message ?? 'A photo format could not be verified.');
@@ -129,7 +132,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       {photoPreviews.length > 0 && <div aria-label="Selected photo previews"><p>Local photo previews (not uploaded):</p><ul>{photoPreviews.map(preview => <li key={preview.url}><img src={preview.url} alt={`Selected cleaning photo: ${preview.name}`} width="120" height="90" style={{objectFit:'cover',borderRadius:8}} /></li>)}</ul></div>}
       {photos.some(file => ['image/heic','image/heif'].includes(file.type)) && <p role="note">HEIC photos are selected but cannot be previewed in every browser.</p>}
 
-      {photos.length > 0 && <div><p>{photos.length} photo(s) selected ({(photos.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024).toFixed(1)} MB total). They have not been uploaded.</p><ul>{photos.map((file, index) => <li key={`${file.name}-${index}`}>{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB) <button type="button" onClick={() => { setPhotos(previous => previous.filter((_, i) => i !== index)); setPhotoInputKey(previous => previous + 1); }}>Remove</button></li>)}</ul><button type="button" onClick={() => {setPhotos([]);setPhotoInputKey(previous => previous + 1);}}>Remove all photos</button></div>}
+      {photos.length > 0 && <div><p>{photos.length} photo(s) selected ({(photos.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024).toFixed(1)} MB total). They have not been uploaded.</p><ul>{photos.map((file, index) => <li key={`${file.name}-${index}`}>{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB) <button type="button" onClick={() => { photoSelectionVersion.current += 1; setInspectingPhotos(false); setPhotos(previous => previous.filter((_, i) => i !== index)); setPhotoInputKey(previous => previous + 1); }}>Remove</button></li>)}</ul><button type="button" onClick={() => {photoSelectionVersion.current += 1;setInspectingPhotos(false);setPhotos([]);setPhotoInputKey(previous => previous + 1);}}>Remove all photos</button></div>}
       <label><input type="checkbox" checked={contactConsent} onChange={e => setContactConsent(e.target.checked)} required /> I agree that PureHome may contact me about this cleaning quote by email or phone. I understand this is not an appointment confirmation or a payment request.</label>
       <button type="button" onClick={() => setShowReview(previous => !previous)} aria-expanded={showReview}>{showReview ? 'Hide request preview' : 'Preview my request'}</button>
       {showReview && validateGuestQuoteDraft({ ...form, service }, today) && <p role="alert">Before submitting: {validateGuestQuoteDraft({ ...form, service }, today)}</p>}
