@@ -10,12 +10,18 @@ export async function readLimitedBody(stream,limit=65536) {
   while(true){
    const {value,done}=await reader.read();
    if(done)break;
-   if(!(value instanceof Uint8Array))return {ok:false,reason:'invalid_chunk'};
+   if(!(value instanceof Uint8Array)){
+    await reader.cancel().catch(()=>{});
+    return {ok:false,reason:'invalid_chunk'};
+   }
    length+=value.byteLength;
    if(length>limit){await reader.cancel().catch(()=>{});return {ok:false,reason:'too_large'};}
    chunks.push(value);
   }
- }catch{return {ok:false,reason:'read_failed'};}
+ }catch{
+  await reader.cancel().catch(()=>{});
+  return {ok:false,reason:'read_failed'};
+ }
  finally{reader.releaseLock();}
  const bytes=new Uint8Array(length);
  let offset=0;
