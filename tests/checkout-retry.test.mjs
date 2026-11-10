@@ -36,7 +36,11 @@ test('coverage loading does not disable payment retry', () => {
 
 test('saved booking navigation opens bookings, not payment confirmation', () => {
   const app = readFileSync(new URL('../src/main.tsx', import.meta.url), 'utf8');
-  assert.match(app, /viewBookings=\{\(\)=>setView\('bookings'\)\}/);
+  // The current launch flow uses guest quotes instead of mounting the legacy BookingForm.
+  // The legacy saved-booking event must still open the bookings view, never success.
+  assert.match(app, /addEventListener\('purehome-open-bookings',h\)/);
+  assert.match(app, /const h=\(\)=>setView\('bookings'\)/);
+  assert.match(app, /<GuestQuoteRequestDraft/);
 });
 
 test('unexpected booking preparation errors release loading state', () => {
