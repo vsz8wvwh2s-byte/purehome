@@ -41,3 +41,7 @@ Do not enable live submissions until an authorized owner verifies all launch che
 ## Proposed payment persistence (not deployed)
 
 The draft at `docs/sql/quote-payments-proposed.sql` defines private payment plans, exact cent-denominated deposit/balance amounts, unique Stripe Checkout session identifiers, and webhook-event deduplication. **This SQL has not been applied.** The live Supabase table inspection timed out, so confirm the quote ID type, owner authorization, foreign keys, and RLS before deploying the schema. No payment webhook is running, and no checkout should be enabled yet.
+
+## Stripe webhook preflight (source only, not deployed)
+
+The optional `supabase/functions/stripe-webhook-preflight/index.ts` is a **disabled, read-only, test-only** preflight for raw Stripe signature checks. It requires `PUREHOME_ENABLE_STRIPE_WEBHOOK_PREFLIGHT=true` and `STRIPE_WEBHOOK_SECRET_TEST`, and only recognizes `cs_test_` Checkout sessions. It returns HTTP 503 even for valid events because no payment event has been persisted; never register this preflight as a production Stripe webhook endpoint or enable it in live mode. Before implementing a real handler, deploy the private payment schema, ensure idempotent event processing and state changes happen in one database transaction, and test Stripe retry behavior. Keep secrets in server-side Supabase secrets, never in `VITE_` environment variables.
