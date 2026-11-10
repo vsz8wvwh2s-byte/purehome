@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import TurnstileChallenge from './TurnstileChallenge';
 import {validateQuotePhotos} from '../quote-photo-validation.js';
+import {validateGuestQuoteDraft} from '../guest-quote-validation.js';
 
 export type QuoteRequestDraft = {
   service: 'Standard Cleaning' | 'Deep Cleaning';
@@ -52,8 +53,9 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!submissionsEnabled || !token || submitting || submitted || photos.length || photoError || !contactConsent) return;
-    if (!form.name.trim() || !form.address.trim() || form.description.trim().length < 10 || (form.preferredDate && form.preferredDate < today)) {
-      setSubmissionMessage('Please enter complete cleaning details and choose a current or future preferred date.');
+    const validationError = validateGuestQuoteDraft({ ...form, service }, today);
+    if (validationError) {
+      setSubmissionMessage(validationError);
       return;
     }
     setSubmitting(true);
