@@ -39,6 +39,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const [token, setToken] = useState('');
   const [challengeAttempt, setChallengeAttempt] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const submissionLock = useRef(false);
   const [submitted, setSubmitted] = useState(false);
   const [deliveryUncertain, setDeliveryUncertain] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState('');
@@ -77,12 +78,13 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     setForm(previous => ({ ...previous, [key]: value }));
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!submissionsEnabled || !token || submitting || submitted || photos.length || inspectingPhotos || photoError || !contactConsent) return;
+    if (!submissionsEnabled || !token || submissionLock.current || submitting || submitted || deliveryUncertain || photos.length || inspectingPhotos || photoError || !contactConsent) return;
     const validationError = validateGuestQuoteDraft({ ...form, service }, today);
     if (validationError) {
       setSubmissionMessage(validationError);
       return;
     }
+    submissionLock.current = true;
     setSubmitting(true);
     setSubmissionMessage('');
     setDeliveryUncertain(false);
@@ -111,6 +113,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
         setSubmissionMessage(error instanceof Error ? error.message : 'Unable to send your request. Please try again later.');
       }
     } finally {
+      submissionLock.current = false;
       setSubmitting(false);
       setToken('');
       // A Turnstile response is single-use. Render a fresh challenge after every attempt.
