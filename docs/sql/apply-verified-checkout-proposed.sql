@@ -35,7 +35,11 @@ begin
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_event_id, 0));
   select * into v_existing from purehome_private.stripe_webhook_events where stripe_event_id=p_event_id;
   if found then
-    if v_existing.stripe_event_type is distinct from p_event_type or v_existing.processed_at is null then
+    if v_existing.stripe_event_type is distinct from p_event_type
+      or v_existing.checkout_session_id is distinct from p_session_id
+      or v_existing.amount_cents is distinct from p_amount_cents
+      or v_existing.currency is distinct from p_currency
+      or v_existing.processed_at is null then
       raise exception 'Event ID collision or unfinished event processing';
     end if
     select q.id,q.state into v_plan.id,v_plan.state
@@ -73,8 +77,8 @@ begin
   end if;
   if p_amount_cents<>v_expected then raise exception 'Payment amount mismatch'; end if;
 
-  insert into purehome_private.stripe_webhook_events(stripe_event_id,stripe_event_type,processed_at)
-  values(p_event_id,p_event_type,pg_catalog.now());
+  insert into purehome_private.stripe_webhook_events(stripe_event_id,stripe_event_type,checkout_session_id,amount_cents,currency,processed_at)
+  values(p_event_id,p_event_type,p_session_id,p_amount_cents,p_currency,pg_catalog.now());
   if v_plan.state<>v_next then
     update purehome_private.quote_payment_plans
     set state=v_next,
