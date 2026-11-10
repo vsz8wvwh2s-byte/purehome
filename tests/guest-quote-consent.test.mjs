@@ -10,9 +10,11 @@ test('guest quote requires explicit contact consent',()=>{
  assert.match(src,/service, contactConsent, turnstileToken: token/);
 });
 test('guest quote rejects stale dates and blank descriptions before submission',()=>{
- assert.match(src,/form\.preferredDate < today/);
- assert.match(src,/form\.description\.trim\(\)\.length < 10/);
- assert.match(src,/form\.address\.trim\(\)/);
+ assert.match(src,/validateGuestQuoteDraft\(\{ \.\.\.form, service \}, today\)/);
+ const validation=readFileSync(new URL('../src/guest-quote-validation.js',import.meta.url),'utf8');
+ assert.match(validation,/value<today/);
+ assert.match(validation,/form\.description\.trim\(\)\.length<10/);
+ assert.match(validation,/form\.address\.trim\(\)/);
 });
 
 test('server requires affirmative consent before storing a quote request',()=>{
