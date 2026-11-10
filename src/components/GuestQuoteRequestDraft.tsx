@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import TurnstileChallenge from './TurnstileChallenge';
 import {validateQuotePhotos} from '../quote-photo-validation.js';
+import {inspectQuotePhotoSignatures} from '../quote-photo-signature.js';
 import {validateGuestQuoteDraft} from '../guest-quote-validation.js';
 
 export type QuoteRequestDraft = {
@@ -30,6 +31,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     return () => previews.forEach(preview => URL.revokeObjectURL(preview.url));
   }, [photos]);
   const [photoError, setPhotoError] = useState('');
+  const [inspectingPhotos, setInspectingPhotos] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [contactConsent, setContactConsent] = useState(false);
   const [token, setToken] = useState('');
@@ -42,11 +44,20 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const submissionsEnabled = import.meta.env.VITE_ENABLE_GUEST_QUOTES === 'true' && Boolean(siteKey);
   const [photoInputKey, setPhotoInputKey] = useState(0);
   const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-  function selectPhotos(files: FileList | null) {
+  async function selectPhotos(files: FileList | null) {
     const selected = Array.from(files ?? []);
     const validation = validateQuotePhotos(selected);
     if (!validation.ok) {
       setPhotoError(validation.message ?? 'Invalid photo selection.');
+      setPhotos([]);
+      setPhotoInputKey(previous => previous + 1);
+      return;
+    }
+    setInspectingPhotos(true);
+    const signatures = await inspectQuotePhotoSignatures(selected);
+    setInspectingPhotos(false);
+    if (!signatures.ok) {
+      setPhotoError(signatures.message ?? 'A photo format could not be verified.');
       setPhotos([]);
       setPhotoInputKey(previous => previous + 1);
       return;
@@ -58,7 +69,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     setForm(previous => ({ ...previous, [key]: value }));
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!submissionsEnabled || !token || submitting || submitted || photos.length || photoError || !contactConsent) return;
+    if (!submissionsEnabled || !token || submitting || submitted || photos.length || inspectingPhotos || photoError || !contactConsent) return;
     const validationError = validateGuestQuoteDraft({ ...form, service }, today);
     if (validationError) {
       setSubmissionMessage(validationError);
@@ -112,7 +123,8 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       <label>Preferred date<input type="date" min={today} value={form.preferredDate} onChange={e => update('preferredDate', e.target.value)} /></label>
       <label>What needs cleaning?<textarea required minLength={10} maxLength={3000} value={form.description} onChange={e => update('description', e.target.value)} placeholder="Tell us the number of rooms, approximate home size, pets, and areas needing extra attention." /></label>
       <p aria-live="polite">{form.description.length} / 3000 characters</p>
-      <label>Photos (optional)<input type="file" key={photoInputKey} accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => selectPhotos(e.target.files)} /></label>
+      <label>Photos (optional)<input type="file" key={photoInputKey} accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => void selectPhotos(e.target.files)} /></label>
+      {inspectingPhotos && <p role="status">Checking selected photo formats…</p>}
       {photoError && <p role="alert">{photoError}</p>}
       {photoPreviews.length > 0 && <div aria-label="Selected photo previews"><p>Local photo previews (not uploaded):</p><ul>{photoPreviews.map(preview => <li key={preview.url}><img src={preview.url} alt={`Selected cleaning photo: ${preview.name}`} width="120" height="90" style={{objectFit:'cover',borderRadius:8}} /></li>)}</ul></div>}
       {photos.some(file => ['image/heic','image/heif'].includes(file.type)) && <p role="note">HEIC photos are selected but cannot be previewed in every browser.</p>}
@@ -128,7 +140,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       {deliveryUncertain && <p role="alert">The connection was interrupted. Your request may have arrived; please check with PureHome before trying again.</p>}
       {submitting && <p role="status">Sending securely… Please keep this page open.</p>}
       <p role="status">{submissionMessage || (submissionsEnabled ? photos.length ? 'Remove selected photos to submit without photos for now.' : 'Complete security verification to submit.' : 'Quote requests are not accepting submissions yet. Your information has not been sent.')}</p>
-      <button type="submit" className="primary" disabled={!submissionsEnabled || !token || !contactConsent || submitting || submitted || deliveryUncertain || photos.length > 0 || Boolean(photoError)}>{submitting ? 'Sending request…' : submissionsEnabled ? 'Send quote request' : 'Quote requests coming soon'}</button>
+      <button type="submit" className="primary" disabled={!submissionsEnabled || !token || !contactConsent || submitting || submitted || deliveryUncertain || inspectingPhotos || photos.length > 0 || Boolean(photoError)}>{submitting ? 'Sending request…' : submissionsEnabled ? 'Send quote request' : 'Quote requests coming soon'}</button>
     </form>}
   </section>;
 }
