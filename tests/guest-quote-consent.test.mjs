@@ -6,7 +6,9 @@ test('guest quote requires explicit contact consent',()=>{
  assert.match(src,/const \[contactConsent, setContactConsent\] = useState\(false\)/);
  assert.match(src,/type="checkbox" checked=\{contactConsent\}/);
  assert.match(src,/I agree that PureHome may contact me/);
- assert.match(src,/!contactConsent \|\| submitting/);
+ assert.match(src,/!submitting && !submitted && !deliveryUncertain/);
+ assert.match(src,/Boolean\(token\) && contactConsent/);
+ assert.match(src,/\|\| !contactConsent\) return/);
  assert.match(src,/service, contactConsent, turnstileToken: token/);
 });
 test('guest quote rejects stale dates and blank descriptions before submission',()=>{
