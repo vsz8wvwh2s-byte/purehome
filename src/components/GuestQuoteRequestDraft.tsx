@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import TurnstileChallenge from './TurnstileChallenge';
 import {validateQuotePhotos} from '../quote-photo-validation.js';
 import {validateGuestQuoteDraft} from '../guest-quote-validation.js';
@@ -23,6 +23,12 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     preferredDate: '', description: '',
   });
   const [photos, setPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<{name:string;url:string}[]>([]);
+  useEffect(() => {
+    const previews = photos.filter(file => ['image/jpeg','image/png','image/webp'].includes(file.type)).map(file => ({name:file.name,url:URL.createObjectURL(file)}));
+    setPhotoPreviews(previews);
+    return () => previews.forEach(preview => URL.revokeObjectURL(preview.url));
+  }, [photos]);
   const [photoError, setPhotoError] = useState('');
   const [showReview, setShowReview] = useState(false);
   const [contactConsent, setContactConsent] = useState(false);
@@ -108,6 +114,9 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       <p aria-live="polite">{form.description.length} / 3000 characters</p>
       <label>Photos (optional)<input type="file" key={photoInputKey} accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => selectPhotos(e.target.files)} /></label>
       {photoError && <p role="alert">{photoError}</p>}
+      {photoPreviews.length > 0 && <div aria-label="Selected photo previews"><p>Local photo previews (not uploaded):</p><ul>{photoPreviews.map(preview => <li key={preview.url}><img src={preview.url} alt={`Selected cleaning photo: ${preview.name}`} width="120" height="90" style={{objectFit:'cover',borderRadius:8}} /></li>)}</ul></div>}
+      {photos.some(file => ['image/heic','image/heif'].includes(file.type)) && <p role="note">HEIC photos are selected but cannot be previewed in every browser.</p>}
+
       {photos.length > 0 && <div><p>{photos.length} photo(s) selected ({(photos.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024).toFixed(1)} MB total). They have not been uploaded.</p><ul>{photos.map((file, index) => <li key={`${file.name}-${index}`}>{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB) <button type="button" onClick={() => { setPhotos(previous => previous.filter((_, i) => i !== index)); setPhotoInputKey(previous => previous + 1); }}>Remove</button></li>)}</ul><button type="button" onClick={() => {setPhotos([]);setPhotoInputKey(previous => previous + 1);}}>Remove all photos</button></div>}
       <label><input type="checkbox" checked={contactConsent} onChange={e => setContactConsent(e.target.checked)} required /> I agree that PureHome may contact me about this cleaning quote by email or phone. I understand this is not an appointment confirmation or a payment request.</label>
       <button type="button" onClick={() => setShowReview(previous => !previous)} aria-expanded={showReview}>{showReview ? 'Hide request preview' : 'Preview my request'}</button>
