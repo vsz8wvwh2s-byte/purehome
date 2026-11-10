@@ -51,6 +51,8 @@ Deno.serve(async request => {
   const address = clean(payload.address, 300), description = clean(payload.description, 3000);
   const service = clean(payload.service, 50), preferredDate = clean(payload.preferredDate, 10);
   const token = clean(payload.turnstileToken, 4096);
+  // A checkbox on the client is not sufficient: require affirmative consent at the endpoint.
+  const contactConsent = payload.contactConsent === true;
   // Date parsing alone normalizes invalid dates such as February 30.
   const validDate = !preferredDate || (() => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate)) return false;
@@ -61,7 +63,7 @@ Deno.serve(async request => {
   if (!name || name.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
     phone.length < 7 || phone.length > 30 || !address || address.length > 300 ||
     description.length < 10 || description.length > 3000 || !['Standard Cleaning', 'Deep Cleaning'].includes(service) ||
-    (!validDate || (preferredDate && preferredDate < new Date().toISOString().slice(0, 10))) || !token)
+    (!validDate || (preferredDate && preferredDate < new Date().toISOString().slice(0, 10))) || !token || !contactConsent)
     return respond(400, { error: 'Please check your details and verification' }, origin);
   const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
