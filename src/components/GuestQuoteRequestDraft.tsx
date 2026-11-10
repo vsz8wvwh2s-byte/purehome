@@ -33,6 +33,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const [photoError, setPhotoError] = useState('');
   const [inspectingPhotos, setInspectingPhotos] = useState(false);
   const photoSelectionVersion = useRef(0);
+  useEffect(() => () => { photoSelectionVersion.current += 1; }, []);
   const [showReview, setShowReview] = useState(false);
   const [contactConsent, setContactConsent] = useState(false);
   const [token, setToken] = useState('');
@@ -48,20 +49,22 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   async function selectPhotos(files: FileList | null) {
     const selectionVersion = ++photoSelectionVersion.current;
     const selected = Array.from(files ?? []);
+    setInspectingPhotos(false);
+    setPhotos([]);
+    setPhotoError('');
     const validation = validateQuotePhotos(selected);
     if (!validation.ok) {
       setPhotoError(validation.message ?? 'Invalid photo selection.');
-      setPhotos([]);
       setPhotoInputKey(previous => previous + 1);
       return;
     }
+    if (selected.length === 0) return;
     setInspectingPhotos(true);
     const signatures = await inspectQuotePhotoSignatures(selected);
     if (selectionVersion !== photoSelectionVersion.current) return;
     setInspectingPhotos(false);
     if (!signatures.ok) {
       setPhotoError(signatures.message ?? 'A photo format could not be verified.');
-      setPhotos([]);
       setPhotoInputKey(previous => previous + 1);
       return;
     }
