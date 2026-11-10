@@ -7,7 +7,8 @@ export function detectImageType(bytes) {
  if(bytes.length>=12&&String.fromCharCode(...bytes.slice(0,4))==='RIFF'&&String.fromCharCode(...bytes.slice(8,12))==='WEBP')return 'image/webp';
  if(bytes.length>=12&&String.fromCharCode(...bytes.slice(4,8))==='ftyp') {
   const brand=String.fromCharCode(...bytes.slice(8,12));
-  if(['heic','heix','hevc','hevx','mif1','msf1'].includes(brand))return 'image/heic';
+  // mif1/msf1 are generic HEIF containers and can also hold AVIF; do not guess HEIC.
+  if(['heic','heix','hevc','hevx'].includes(brand))return 'image/heic';
  }
  return null;
 }
