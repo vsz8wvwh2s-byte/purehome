@@ -1,4 +1,4 @@
--- Disposable test database only. Run AFTER both proposed schema files.
+-- Disposable test database only. Run AFTER the proposed payment schema and three function files.
 -- This transaction rolls back every fixture and payment event it creates.
 -- Requires a trusted administrative SQL session and all FOUR proposed SQL files.
 -- Never run with live Stripe IDs.
@@ -11,8 +11,8 @@ declare
  v_balance bigint;
 begin
  insert into purehome_private.quote_payment_plans
-   (id,quote_request_id,quote_total_cents,deposit_checkout_session_id,balance_checkout_session_id)
- values(v_id,gen_random_uuid(),20001,'cs_test_purehomeDepositFixture','cs_test_purehomeBalanceFixture');
+   (id,quote_request_id,quote_total_cents,deposit_checkout_session_id)
+ values(v_id,gen_random_uuid(),20001,'cs_test_purehomeDepositFixture');
  select deposit_cents,balance_cents into v_deposit,v_balance
  from purehome_private.quote_payment_plans where id=v_id;
  if v_deposit<>6000 or v_balance<>14001 then
