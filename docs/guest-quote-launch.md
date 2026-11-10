@@ -28,3 +28,12 @@ The guest quote endpoint is **not live** merely because its code is committed. K
 - Network interruption may leave delivery uncertain; customers should contact PureHome before retrying.
 
 Do not enable live submissions until an authorized owner verifies all launch checks.
+
+## Updated payment policy: 30% before / 70% after
+
+- Owner sets the total quote; deposit is 30% rounded to the nearest cent, and the final balance is total minus deposit.
+- Customer must explicitly accept the quote and pay the 30% deposit through a verified Stripe checkout before the owner confirms the appointment and availability.
+- After the owner marks the cleaning completed, collect the remaining 70% using a separate, secure Stripe payment request. Do not automatically charge a saved card without separately authorized consent and compliant setup.
+- Both payment stages require server-side authorization, idempotency, Stripe webhook signature verification, and persisted payment states; the client-side calculator is display-only and is never the source of truth for amounts.
+- Handle failed payments, cancellations, refunds, and disputes before launch. Never treat a redirect or a client-provided status as proof of payment.
+- **Not implemented yet:** customer acceptance, either Stripe guest checkout, payment tracking, or completion-triggered balance request. Keep guest payment features disabled until end-to-end testing with Stripe sandbox credentials.
