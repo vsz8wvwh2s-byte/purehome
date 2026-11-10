@@ -37,3 +37,7 @@ Do not enable live submissions until an authorized owner verifies all launch che
 - Both payment stages require server-side authorization, idempotency, Stripe webhook signature verification, and persisted payment states; the client-side calculator is display-only and is never the source of truth for amounts.
 - Handle failed payments, cancellations, refunds, and disputes before launch. Never treat a redirect or a client-provided status as proof of payment.
 - **Not implemented yet:** customer acceptance, either Stripe guest checkout, payment tracking, or completion-triggered balance request. Keep guest payment features disabled until end-to-end testing with Stripe sandbox credentials.
+
+## Proposed payment persistence (not deployed)
+
+The draft at `docs/sql/quote-payments-proposed.sql` defines private payment plans, exact cent-denominated deposit/balance amounts, unique Stripe Checkout session identifiers, and webhook-event deduplication. **This SQL has not been applied.** The live Supabase table inspection timed out, so confirm the quote ID type, owner authorization, foreign keys, and RLS before deploying the schema. No payment webhook is running, and no checkout should be enabled yet.
