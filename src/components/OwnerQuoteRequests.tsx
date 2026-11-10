@@ -61,12 +61,12 @@ PureHome`;
   const safeCell=(value:unknown)=>{
    const text=String(value??'');
    // Spreadsheet programs may interpret cells beginning with formula operators as executable formulas.
-   const protectedText=/^[\\s\\u0000-\\u001f]*[=+@-]/.test(text)?"'"+text:text;
+   const protectedText=/^[\s\u0000-\u001f]*[=+@-]/.test(text)?"'"+text:text;
    return '"'+protectedText.replace(/"/g,'""')+'"';
   };
   const headers=['Request ID','Received','Customer','Email','Phone','Service','Address','Preferred date','Status','Quoted amount USD','Description'];
   const lines=[headers,...visible.map(r=>[r.id,r.created_at,r.customer_name,r.customer_email,r.customer_phone,r.services?.name??'',r.address,r.preferred_date??'',r.status,r.quoted_amount??'',r.description])];
-  const csv='\\uFEFF'+lines.map(line=>line.map(safeCell).join(',')).join('\\r\\n');
+  const csv='\uFEFF'+lines.map(line=>line.map(safeCell).join(',')).join('\r\n');
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
   const link=document.createElement('a');
   link.href=url;link.download='purehome-quote-requests.csv';document.body.appendChild(link);link.click();link.remove();
