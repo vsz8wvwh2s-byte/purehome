@@ -7,6 +7,9 @@ test('detects JPEG, PNG, WebP and HEIC signatures',()=>{
  assert.equal(detectImageType(Uint8Array.from([137,80,78,71,13,10,26,10])),'image/png');
  assert.equal(detectImageType(Uint8Array.from(Buffer.from('RIFF0000WEBP'))),'image/webp');
  assert.equal(detectImageType(Uint8Array.from(Buffer.from('0000ftypheic'))),'image/heic');
+ assert.equal(detectImageType(Uint8Array.from(Buffer.from('0000ftypmif1'))),null);
+ assert.equal(detectImageType(Uint8Array.from(Buffer.from('0000ftypmsf1'))),null);
+ assert.equal(detectImageType(Uint8Array.from(Buffer.from('0000ftypavif'))),null);
  assert.equal(detectImageType(Uint8Array.from(Buffer.from('not an image'))),null);
 });
 test('rejects mislabeled and unreadable images',async()=>{
