@@ -20,3 +20,24 @@ test('rejects missing body and non-byte chunks',async()=>{
  assert.deepEqual(await readLimitedBody(null),{ok:false,reason:'missing_body'});
  assert.deepEqual(await readLimitedBody(stream(['not bytes'])),{ok:false,reason:'invalid_chunk'});
 });
+
+test('cancels an oversized stream before consuming further chunks',async()=>{
+ let cancelled=false;
+ const source=new ReadableStream({
+  start(controller){controller.enqueue(new Uint8Array(11));},
+  cancel(){cancelled=true;}
+ });
+ const result=await readLimitedBody(source,10);
+ assert.deepEqual(result,{ok:false,reason:'too_large'});
+ assert.equal(cancelled,true);
+});
+test('cancels a malformed chunk stream',async()=>{
+ let cancelled=false;
+ const source=new ReadableStream({
+  start(controller){controller.enqueue('invalid');},
+  cancel(){cancelled=true;}
+ });
+ const result=await readLimitedBody(source,10);
+ assert.deepEqual(result,{ok:false,reason:'invalid_chunk'});
+ assert.equal(cancelled,true);
+});
