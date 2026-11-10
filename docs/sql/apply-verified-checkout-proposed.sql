@@ -21,6 +21,7 @@ declare
   v_stage text;
   v_expected bigint;
   v_next text;
+  v_existing purehome_private.stripe_webhook_events%rowtype;
 begin
   if p_event_id !~ '^evt_[A-Za-z0-9]+$'
     or p_event_type not in ('checkout.session.completed','checkout.session.async_payment_succeeded')
@@ -32,11 +33,20 @@ begin
 
   -- Serialize duplicate deliveries for this event ID, including retries.
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_event_id, 0));
-  if exists(select 1 from purehome_private.stripe_webhook_events where stripe_event_id=p_event_id and processed_at is not null) then
+  select * into v_existing from purehome_private.stripe_webhook_events where stripe_event_id=p_event_id;
+  if found then
+    if v_existing.stripe_event_type is distinct from p_event_type or v_existing.processed_at is null then
+      raise exception 'Event ID collision or unfinished event processing';
+    end if
     select q.id,q.state into v_plan.id,v_plan.state
     from purehome_private.quote_payment_plans q
     where q.deposit_checkout_session_id=p_session_id or q.balance_checkout_session_id=p_session_id;
     if not found then raise exception 'Previously processed event has no matching payment plan'; end if;
+    -- Never accept an event ID replayed against another checkout or amount.
+    if p_amount_cents <> case when v_plan.deposit_checkout_session_id=p_session_id
+      then v_plan.deposit_cents else v_plan.balance_cents end or v_plan.currency is distinct from p_currency then
+      raise exception 'Duplicate event payload does not match payment plan';
+    end if;
     return query select v_plan.id,v_plan.state,true;
     return;
   end if;
