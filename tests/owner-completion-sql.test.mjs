@@ -12,5 +12,5 @@ test('owner completion requires deposit payment and locks the plan',()=>{
 });
 test('disposable scenario uses completion function before requesting balance',()=>{
  assert.match(smoke,/mark_cleaning_completed\(v_id\)/);
- assert.match(smoke,/state='awaiting_balance' where id=v_id and state='cleaning_completed'/);
+ assert.match(smoke,/mark_balance_requested\(v_id,'cs_test_purehomeBalanceFixture'\)/);
 });
