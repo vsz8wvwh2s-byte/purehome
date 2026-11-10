@@ -41,8 +41,8 @@ begin
       or v_existing.currency is distinct from p_currency
       or v_existing.processed_at is null then
       raise exception 'Event ID collision or unfinished event processing';
-    end if
-    select q.id,q.state into v_plan.id,v_plan.state
+    end if;
+    select * into v_plan
     from purehome_private.quote_payment_plans q
     where q.deposit_checkout_session_id=p_session_id or q.balance_checkout_session_id=p_session_id;
     if not found then raise exception 'Previously processed event has no matching payment plan'; end if;
