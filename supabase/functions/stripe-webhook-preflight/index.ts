@@ -4,6 +4,7 @@
 // It NEVER acknowledges a verified payment as processed.
 import {verifyStripeSignature} from '../../../src/stripe-webhook-signature.js';
 import {parseCheckoutPaymentEvent} from '../../../src/stripe-checkout-event.js';
+import {readLimitedBody} from '../../../src/limited-webhook-body.js';
 
 const json=(status:number,body:Record<string,unknown>)=>new Response(JSON.stringify(body),{
  status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}
@@ -20,9 +21,9 @@ Deno.serve(async(request:Request)=>{
  if(!Number.isFinite(contentLength)||contentLength>65536)return json(413,{error:'Payload too large'});
  let rawBody:string;
  try{
-  const body=await request.arrayBuffer();
-  if(body.byteLength>65536)return json(413,{error:'Payload too large'});
-  rawBody=new TextDecoder('utf-8',{fatal:true}).decode(body);
+  const body=await readLimitedBody(request.body,65536);
+  if(!body.ok)return json(body.reason==='too_large'?413:400,{error:body.reason==='too_large'?'Payload too large':'Invalid request body'});
+  rawBody=new TextDecoder('utf-8',{fatal:true}).decode(body.bytes);
  }catch{return json(400,{error:'Invalid request body'});}
  const valid=await verifyStripeSignature({rawBody,signatureHeader,webhookSecret:secret});
  if(!valid)return json(400,{error:'Invalid webhook signature'});
