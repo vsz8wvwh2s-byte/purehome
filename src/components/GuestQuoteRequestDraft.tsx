@@ -100,14 +100,14 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   return <section className="booking">
     <button type="button" className="back" onClick={onBack}>← Back</button>
     <h1>Request a {service} quote</h1>
-    <p>Tell us about your home. The PureHome owner will personally review your request and send a custom quote before any payment.</p>
+    <p>Tell us about your home. The PureHome owner will personally review your request and send a custom quote. If you accept, the planned payment schedule is 30% before cleaning and 70% after the job is complete. Online payments are not enabled yet.</p>
     <p role="note">{submissionsEnabled ? 'Submit your request for a personal quote. Photo uploads are not available yet.' : 'This is a preview form. Submissions and photo uploads are not yet enabled.'}</p>
     {submitted ? <section role="status" aria-label="Quote request received"><h2>Request received</h2><p>{submissionMessage}</p><p>We will review the details and contact you using the email or phone you provided. Your preferred date is not a confirmed appointment.</p><button type="button" onClick={onBack}>Return to services</button></section> : <form onSubmit={submit}>
       <label>Full name<input required maxLength={120} autoComplete="name" value={form.name} onChange={e => update('name', e.target.value)} /></label>
       <label>Email<input required maxLength={254} type="email" autoComplete="email" value={form.email} onChange={e => update('email', e.target.value)} /></label>
       <label>Phone<input required minLength={7} maxLength={30} type="tel" autoComplete="tel" value={form.phone} onChange={e => update('phone', e.target.value)} /></label>
       <label>Cleaning address<input required maxLength={300} autoComplete="street-address" value={form.address} onChange={e => update('address', e.target.value)} /></label>
-      <p>A preferred date is a request only. Your appointment is not reserved until your quote is accepted and payment is complete.</p>
+      <p>A preferred date is a request only. Your appointment is not reserved until your quote is accepted, the 30% deposit is paid, and availability is confirmed. The remaining 70% is due after cleaning is completed.</p>
       <label>Preferred date<input type="date" min={today} value={form.preferredDate} onChange={e => update('preferredDate', e.target.value)} /></label>
       <label>What needs cleaning?<textarea required minLength={10} maxLength={3000} value={form.description} onChange={e => update('description', e.target.value)} placeholder="Tell us the number of rooms, approximate home size, pets, and areas needing extra attention." /></label>
       <p aria-live="polite">{form.description.length} / 3000 characters</p>
