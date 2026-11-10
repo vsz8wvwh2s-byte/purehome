@@ -63,7 +63,12 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     }
     if (selected.length === 0) return;
     setInspectingPhotos(true);
-    const signatures = await inspectQuotePhotoSignatures(selected);
+    let signatures: {ok:boolean;message?:string};
+    try {
+      signatures = await inspectQuotePhotoSignatures(selected);
+    } catch {
+      signatures = {ok:false,message:'Unable to inspect the selected photos. Please try again.'};
+    }
     if (selectionVersion !== photoSelectionVersion.current) return;
     setInspectingPhotos(false);
     if (!signatures.ok) {
