@@ -1,0 +1,15 @@
+// Advisory checklist only. Never infer deposit payment from a manually accepted quote.
+// Booking confirmation requires a server-verified payment event and owner-approved slot.
+export function bookingReadiness({status,quotedAmount,preferredDate,depositVerified=false,availabilityConfirmed=false}) {
+ const quoteAccepted=status==='accepted';
+ const validPrice=typeof quotedAmount==='number'&&Number.isFinite(quotedAmount)&&quotedAmount>=1&&quotedAmount<=100000&&Math.round(quotedAmount*100)===quotedAmount*100;
+ const hasPreferredDate=typeof preferredDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(preferredDate);
+ const steps=[
+  {key:'quote',label:'Customer accepted the saved quote',done:quoteAccepted},
+  {key:'price',label:'Valid personalized quote price',done:validPrice},
+  {key:'date',label:'Preferred date supplied (not reserved)',done:hasPreferredDate},
+  {key:'deposit',label:'30% deposit verified by payment backend',done:depositVerified===true},
+  {key:'availability',label:'Cleaning time confirmed by owner',done:availabilityConfirmed===true}
+ ];
+ return {steps,readyToConfirm:steps.every(step=>step.done)};
+}
