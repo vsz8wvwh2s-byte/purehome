@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import TurnstileChallenge from './TurnstileChallenge';
+import {validateQuotePhotos} from '../quote-photo-validation.js';
 
 export type QuoteRequestDraft = {
   service: 'Standard Cleaning' | 'Deep Cleaning';
@@ -36,22 +37,9 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   function selectPhotos(files: FileList | null) {
     const selected = Array.from(files ?? []);
-    const totalBytes = selected.reduce((sum, file) => sum + file.size, 0);
-    const signatures = selected.map(file => `${file.name}:${file.size}:${file.lastModified}`);
-    if (new Set(signatures).size !== signatures.length) {
-      setPhotoError('The same photo was selected more than once. Please choose unique photos.');
-      setPhotos([]);
-      setPhotoInputKey(previous => previous + 1);
-      return;
-    }
-    if (totalBytes > 15 * 1024 * 1024) {
-      setPhotoError('Your photos are too large together. Please keep the total under 15 MB.');
-      setPhotos([]);
-      setPhotoInputKey(previous => previous + 1);
-      return;
-    }
-    if (selected.length > 5 || selected.some(file => !['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
-      setPhotoError('Choose up to five JPG, PNG, WebP, or HEIC photos, each no larger than 5 MB.');
+    const validation = validateQuotePhotos(selected);
+    if (!validation.ok) {
+      setPhotoError(validation.message ?? 'Invalid photo selection.');
       setPhotos([]);
       setPhotoInputKey(previous => previous + 1);
       return;
