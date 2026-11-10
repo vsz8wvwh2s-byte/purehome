@@ -53,6 +53,12 @@ begin
  perform * from purehome_private.mark_balance_requested(v_id,'cs_test_purehomeBalanceFixture');
  -- Repeated requests for the same Checkout session must be safe.
  perform * from purehome_private.mark_balance_requested(v_id,'cs_test_purehomeBalanceFixture');
+ begin
+  perform * from purehome_private.mark_balance_requested(v_id,'cs_test_purehomeOtherBalanceFixture');
+  raise exception 'Different balance checkout was accepted';
+ exception when others then
+  if sqlerrm='Different balance checkout was accepted' then raise; end if;
+ end;
  select * into v_result from purehome_private.apply_verified_checkout_event(
   'evt_purehomeBalanceFixture','checkout.session.completed',
   'cs_test_purehomeBalanceFixture',14001,'usd');
