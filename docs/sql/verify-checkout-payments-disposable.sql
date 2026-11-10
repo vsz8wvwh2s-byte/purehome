@@ -24,13 +24,13 @@ begin
   perform * from purehome_private.mark_cleaning_completed(v_unpaid_id);
   raise exception 'Unpaid cleaning completion was accepted';
  exception when others then
-  if sqlerrm='Unpaid cleaning completion was accepted' then raise; end if;
+  if sqlstate <> 'P0001' or sqlerrm <> 'Cannot complete cleaning before verified deposit payment' then raise; end if;
  end;
  begin
   perform * from purehome_private.mark_balance_requested(v_unpaid_id,'cs_test_purehomeUnpaidBalanceFixture');
   raise exception 'Unpaid balance request was accepted';
  exception when others then
-  if sqlerrm='Unpaid balance request was accepted' then raise; end if;
+  if sqlstate <> 'P0001' or sqlerrm <> 'Balance cannot be requested before cleaning is completed' then raise; end if;
  end;
  if v_deposit<>6000 or v_balance<>14001 then
    raise exception '30/70 rounding failed';
@@ -53,7 +53,7 @@ begin
    'cs_test_purehomeDepositFixture',6001,'usd');
   raise exception 'Conflicting event replay was accepted';
  exception when others then
-  if sqlerrm='Conflicting event replay was accepted' then raise; end if;
+  if sqlstate <> 'P0001' or sqlerrm <> 'Event ID collision or unfinished event processing' then raise; end if;
  end;
 
  -- A valid session reference is deliberately not stored yet: no balance
@@ -64,7 +64,7 @@ begin
    'cs_test_purehomeBalanceFixture',14001,'usd');
   raise exception 'Premature balance was accepted';
  exception when others then
-  if sqlerrm='Premature balance was accepted' then raise; end if;
+  if sqlstate <> 'P0001' or sqlerrm <> 'Unknown checkout session' then raise; end if;
  end;
 
  -- Exercise the proposed owner completion function after verified deposit.
@@ -76,7 +76,7 @@ begin
   perform * from purehome_private.mark_balance_requested(v_id,'cs_test_purehomeOtherBalanceFixture');
   raise exception 'Different balance checkout was accepted';
  exception when others then
-  if sqlerrm='Different balance checkout was accepted' then raise; end if;
+  if sqlstate <> 'P0001' or sqlerrm <> 'A different balance checkout already exists' then raise; end if;
  end;
  select * into v_result from purehome_private.apply_verified_checkout_event(
   'evt_purehomeBalanceFixture','checkout.session.completed',
