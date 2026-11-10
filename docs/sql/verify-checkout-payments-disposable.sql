@@ -9,12 +9,29 @@ declare
  v_result record;
  v_deposit bigint;
  v_balance bigint;
+ v_unpaid_id uuid:=gen_random_uuid();
 begin
  insert into purehome_private.quote_payment_plans
    (id,quote_request_id,quote_total_cents,deposit_checkout_session_id)
  values(v_id,gen_random_uuid(),20001,'cs_test_purehomeDepositFixture');
  select deposit_cents,balance_cents into v_deposit,v_balance
  from purehome_private.quote_payment_plans where id=v_id;
+ -- A second, unpaid plan must never be marked complete.
+ insert into purehome_private.quote_payment_plans
+   (id,quote_request_id,quote_total_cents)
+ values(v_unpaid_id,gen_random_uuid(),10000);
+ begin
+  perform * from purehome_private.mark_cleaning_completed(v_unpaid_id);
+  raise exception 'Unpaid cleaning completion was accepted';
+ exception when others then
+  if sqlerrm='Unpaid cleaning completion was accepted' then raise; end if;
+ end;
+ begin
+  perform * from purehome_private.mark_balance_requested(v_unpaid_id,'cs_test_purehomeUnpaidBalanceFixture');
+  raise exception 'Unpaid balance request was accepted';
+ exception when others then
+  if sqlerrm='Unpaid balance request was accepted' then raise; end if;
+ end;
  if v_deposit<>6000 or v_balance<>14001 then
    raise exception '30/70 rounding failed';
  end if;
@@ -39,6 +56,8 @@ begin
   if sqlerrm='Conflicting event replay was accepted' then raise; end if;
  end;
 
+ -- A valid session reference is deliberately not stored yet: no balance
+ -- request can be paid until the owner records cleaning completion.
  begin
   perform * from purehome_private.apply_verified_checkout_event(
    'evt_purehomeBalanceFixture','checkout.session.completed',
