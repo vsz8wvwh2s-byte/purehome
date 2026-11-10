@@ -2,7 +2,7 @@
 // Booking confirmation requires a server-verified payment event and owner-approved slot.
 export function bookingReadiness({status,quotedAmount,preferredDate,depositVerified=false,availabilityConfirmed=false}) {
  const quoteAccepted=status==='accepted';
- const validPrice=typeof quotedAmount==='number'&&Number.isFinite(quotedAmount)&&quotedAmount>=1&&quotedAmount<=100000&&Math.round(quotedAmount*100)===quotedAmount*100;
+ const validPrice=typeof quotedAmount==='number'&&Number.isFinite(quotedAmount)&&quotedAmount>=1&&quotedAmount<=100000&&Math.abs(Math.round(quotedAmount*100)-quotedAmount*100)<0.000001;
  const hasPreferredDate=typeof preferredDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(preferredDate);
  const steps=[
   {key:'quote',label:'Customer accepted the saved quote',done:quoteAccepted},
