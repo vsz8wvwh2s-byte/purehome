@@ -23,6 +23,7 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoError, setPhotoError] = useState('');
   const [showReview, setShowReview] = useState(false);
+  const [contactConsent, setContactConsent] = useState(false);
   const [token, setToken] = useState('');
   const [challengeAttempt, setChallengeAttempt] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -62,7 +63,11 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
     setForm(previous => ({ ...previous, [key]: value }));
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!submissionsEnabled || !token || submitting || submitted || photos.length || photoError) return;
+    if (!submissionsEnabled || !token || submitting || submitted || photos.length || photoError || !contactConsent) return;
+    if (!form.name.trim() || !form.address.trim() || form.description.trim().length < 10 || (form.preferredDate && form.preferredDate < today)) {
+      setSubmissionMessage('Please enter complete cleaning details and choose a current or future preferred date.');
+      return;
+    }
     setSubmitting(true);
     setSubmissionMessage('');
     setDeliveryUncertain(false);
@@ -114,13 +119,14 @@ export default function GuestQuoteRequestDraft({ service, onBack }: Props) {
       <label>Photos (optional)<input type="file" key={photoInputKey} accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => selectPhotos(e.target.files)} /></label>
       {photoError && <p role="alert">{photoError}</p>}
       {photos.length > 0 && <div><p>{photos.length} photo(s) selected ({(photos.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024).toFixed(1)} MB total). They have not been uploaded.</p><ul>{photos.map((file, index) => <li key={`${file.name}-${index}`}>{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB) <button type="button" onClick={() => { setPhotos(previous => previous.filter((_, i) => i !== index)); setPhotoInputKey(previous => previous + 1); }}>Remove</button></li>)}</ul><button type="button" onClick={() => {setPhotos([]);setPhotoInputKey(previous => previous + 1);}}>Remove all photos</button></div>}
+      <label><input type="checkbox" checked={contactConsent} onChange={e => setContactConsent(e.target.checked)} required /> I agree that PureHome may contact me about this cleaning quote by email or phone. I understand this is not an appointment confirmation or a payment request.</label>
       <button type="button" onClick={() => setShowReview(previous => !previous)} aria-expanded={showReview}>{showReview ? 'Hide request preview' : 'Preview my request'}</button>
       {showReview && <section aria-label="Request preview"><h2>Review your details</h2><p>Service: {service}</p><p>Name: {form.name || 'Not entered'}</p><p>Email: {form.email || 'Not entered'}</p><p>Phone: {form.phone || 'Not entered'}</p><p>Address: {form.address || 'Not entered'}</p><p>Preferred date: {form.preferredDate || 'Flexible'}</p><p>Cleaning details: {form.description || 'Not entered'}</p><p>Photos selected: {photos.length}</p><p>This is only a local preview. Nothing has been submitted.</p></section>}
       {submissionsEnabled && <TurnstileChallenge key={challengeAttempt} siteKey={siteKey} onToken={setToken} />}
       {deliveryUncertain && <p role="alert">The connection was interrupted. Your request may have arrived; please check with PureHome before trying again.</p>}
       {submitting && <p role="status">Sending securely… Please keep this page open.</p>}
       <p role="status">{submissionMessage || (submissionsEnabled ? photos.length ? 'Remove selected photos to submit without photos for now.' : 'Complete security verification to submit.' : 'Quote requests are not accepting submissions yet. Your information has not been sent.')}</p>
-      <button type="submit" className="primary" disabled={!submissionsEnabled || !token || submitting || submitted || deliveryUncertain || photos.length > 0 || Boolean(photoError)}>{submitting ? 'Sending request…' : submissionsEnabled ? 'Send quote request' : 'Quote requests coming soon'}</button>
+      <button type="submit" className="primary" disabled={!submissionsEnabled || !token || !contactConsent || submitting || submitted || deliveryUncertain || photos.length > 0 || Boolean(photoError)}>{submitting ? 'Sending request…' : submissionsEnabled ? 'Send quote request' : 'Quote requests coming soon'}</button>
     </form>}
   </section>;
 }
