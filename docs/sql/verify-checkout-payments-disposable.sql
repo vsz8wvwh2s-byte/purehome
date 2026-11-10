@@ -1,6 +1,7 @@
 -- Disposable test database only. Run AFTER both proposed schema files.
 -- This transaction rolls back every fixture and payment event it creates.
--- Requires a trusted administrative SQL session. Never run with live Stripe IDs.
+-- Requires a trusted administrative SQL session and all THREE proposed SQL files.
+-- Never run with live Stripe IDs.
 begin;
 do $$
 declare
@@ -47,8 +48,8 @@ begin
   if sqlerrm='Premature balance was accepted' then raise; end if;
  end;
 
- -- Simulate owner marking the cleaning complete and issuing the balance request.
- update purehome_private.quote_payment_plans set state='cleaning_completed' where id=v_id;
+ -- Exercise the proposed owner completion function after verified deposit.
+ perform * from purehome_private.mark_cleaning_completed(v_id);
  update purehome_private.quote_payment_plans set state='awaiting_balance' where id=v_id and state='cleaning_completed';
  select * into v_result from purehome_private.apply_verified_checkout_event(
   'evt_purehomeBalanceFixture','checkout.session.completed',
