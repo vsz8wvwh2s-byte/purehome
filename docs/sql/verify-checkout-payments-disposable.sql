@@ -47,7 +47,9 @@ begin
   if sqlerrm='Premature balance was accepted' then raise; end if;
  end;
 
- update purehome_private.quote_payment_plans set state='awaiting_balance' where id=v_id;
+ -- Simulate owner marking the cleaning complete and issuing the balance request.
+ update purehome_private.quote_payment_plans set state='cleaning_completed' where id=v_id;
+ update purehome_private.quote_payment_plans set state='awaiting_balance' where id=v_id and state='cleaning_completed';
  select * into v_result from purehome_private.apply_verified_checkout_event(
   'evt_purehomeBalanceFixture','checkout.session.completed',
   'cs_test_purehomeBalanceFixture',14001,'usd');
