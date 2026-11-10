@@ -5,7 +5,7 @@ const sql=readFileSync(new URL('../docs/sql/apply-verified-checkout-proposed.sql
 test('transactional event handler locks session and deduplicates events',()=>{
  assert.match(sql,/pg_advisory_xact_lock/);
  assert.match(sql,/for update;/i);
- assert.match(sql,/processed_at is not null/);
+ assert.match(sql,/v_existing\.processed_at is null/);
  assert.match(sql,/insert into purehome_private\.stripe_webhook_events/);
  assert.match(sql,/update purehome_private\.quote_payment_plans/);
 });
