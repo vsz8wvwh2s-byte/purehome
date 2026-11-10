@@ -143,6 +143,12 @@ PureHome`;
   if(nextStatus==='quoted'&&draftAmounts[request.id]!==undefined&&Number(draftAmounts[request.id])!==request.quoted_amount){
    setSaveMessages(previous=>({...previous,[request.id]:'Your draft price differs from the saved price. Save the new amount before marking the quote as sent.'}));return;
   }
+  if(nextStatus==='accepted'&&(request.quoted_amount==null||!Number.isFinite(request.quoted_amount)||request.quoted_amount<1||request.quoted_amount>100000)){
+   setSaveMessages(previous=>({...previous,[request.id]:'A valid saved quote is required before recording acceptance.'}));return;
+  }
+  if(nextStatus==='accepted'&&draftAmounts[request.id]!==undefined&&Number(draftAmounts[request.id])!==request.quoted_amount){
+   setSaveMessages(previous=>({...previous,[request.id]:'Your draft price differs from the saved quote. Acceptance must refer to the exact price the customer agreed to.'}));return;
+  }
   if(nextStatus==='accepted'&&request.status!=='quoted'){
    setSaveMessages(previous=>({...previous,[request.id]:'Only a quote already sent to the customer can be marked accepted.'}));return;
   }
