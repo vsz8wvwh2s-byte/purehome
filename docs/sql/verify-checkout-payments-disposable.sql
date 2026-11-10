@@ -1,6 +1,6 @@
 -- Disposable test database only. Run AFTER both proposed schema files.
 -- This transaction rolls back every fixture and payment event it creates.
--- Requires a trusted administrative SQL session and all THREE proposed SQL files.
+-- Requires a trusted administrative SQL session and all FOUR proposed SQL files.
 -- Never run with live Stripe IDs.
 begin;
 do $$
@@ -50,7 +50,9 @@ begin
 
  -- Exercise the proposed owner completion function after verified deposit.
  perform * from purehome_private.mark_cleaning_completed(v_id);
- update purehome_private.quote_payment_plans set state='awaiting_balance' where id=v_id and state='cleaning_completed';
+ perform * from purehome_private.mark_balance_requested(v_id,'cs_test_purehomeBalanceFixture');
+ -- Repeated requests for the same Checkout session must be safe.
+ perform * from purehome_private.mark_balance_requested(v_id,'cs_test_purehomeBalanceFixture');
  select * into v_result from purehome_private.apply_verified_checkout_event(
   'evt_purehomeBalanceFixture','checkout.session.completed',
   'cs_test_purehomeBalanceFixture',14001,'usd');
