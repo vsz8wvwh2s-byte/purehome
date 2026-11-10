@@ -36,6 +36,23 @@ begin
    raise exception '30/70 rounding failed';
  end if;
 
+ begin
+  perform * from purehome_private.apply_verified_checkout_event(
+   'evt_purehomeWrongAmountFixture','checkout.session.completed',
+   'cs_test_purehomeDepositFixture',5999,'usd');
+  raise exception 'Incorrect deposit amount was accepted';
+ exception when others then
+  if sqlstate <> 'P0001' or sqlerrm <> 'Payment amount mismatch' then raise; end if;
+ end;
+ begin
+  perform * from purehome_private.apply_verified_checkout_event(
+   'evt_purehomeWrongCurrencyFixture','checkout.session.completed',
+   'cs_test_purehomeDepositFixture',6000,'eur');
+  raise exception 'Incorrect currency was accepted';
+ exception when others then
+  if sqlstate <> 'P0001' or sqlerrm <> 'Invalid verified Stripe event input' then raise; end if;
+ end;
+
  select * into v_result from purehome_private.apply_verified_checkout_event(
   'evt_purehomeDepositFixture','checkout.session.completed',
   'cs_test_purehomeDepositFixture',6000,'usd');
